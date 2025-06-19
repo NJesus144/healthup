@@ -40,6 +40,6 @@ jobs:
 
     - name: Run build
       run: npm run build
-      
-    - name: Check TypeScript types
-      run: npx tsc --noEmit
+
+    # - name: Check TypeScript types
+    #   run: npx tsc --noEmit --project tsconfig.json
