@@ -1,0 +1,160 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// MODELS
+model User {
+  id           Int        @id @default(autoincrement())
+  name         String     @db.VarChar(100)
+  email        String     @unique @db.VarChar(100)
+  passwordHash String     @map("password_hash") @db.VarChar(255)
+  phone        String     @db.VarChar(20)
+  cpf          String     @unique @db.VarChar(11)
+  role         UserRole   @default(PATIENT)
+  status       UserStatus @default(ACTIVE)
+
+  // Campos específicos para médicos
+  crm       String?           @unique @db.VarChar(20)
+  specialty MedicalSpecialty?
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relacionamentos
+  patientAppointments Appointment[]        @relation("PatientAppointments")
+  doctorAppointments  Appointment[]        @relation("DoctorAppointments")
+  availability        DoctorAvailability[]
+  blockedDates        BlockedDate[]
+  notifications       Notification[]
+
+  @@map("users")
+}
+
+model DoctorAvailability {
+  id       Int    @id @default(autoincrement())
+  doctorId Int    @map("doctor_id")
+  weekday  Int
+  time     String @db.VarChar(5) // formato HH:MM
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  doctor User @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+
+  @@unique([doctorId, weekday, time])
+  @@map("doctor_availability")
+}
+
+model BlockedDate {
+  id       Int      @id @default(autoincrement())
+  doctorId Int      @map("doctor_id")
+  date     DateTime @db.Date
+  reason   String?  @db.VarChar(255)
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  doctor User @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+
+  @@unique([doctorId, date])
+  @@map("blocked_dates")
+}
+
+model Appointment {
+  id        Int               @id @default(autoincrement())
+  patientId Int               @map("patient_id")
+  doctorId  Int               @map("doctor_id")
+  date      DateTime          @db.Date
+  time      String            @db.VarChar(5) // formato HH:MM
+  notes     String? // Texto livre (sem @db.VarChar)
+  status    AppointmentStatus @default(SCHEDULED)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  patient       User           @relation("PatientAppointments", fields: [patientId], references: [id])
+  doctor        User           @relation("DoctorAppointments", fields: [doctorId], references: [id])
+  notifications Notification[]
+
+  @@unique([doctorId, date, time])
+  @@map("appointments")
+}
+
+model Notification {
+  id            Int                @id @default(autoincrement())
+  userId        Int                @map("user_id")
+  appointmentId Int?               @map("appointment_id")
+  type          NotificationType
+  status        NotificationStatus @default(PENDING)
+  title         String             @db.VarChar(255)
+  message       String // Texto livre
+  sentAt        DateTime?          @map("sent_at")
+  retryCount    Int                @default(0) @map("retry_count")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user        User         @relation(fields: [userId], references: [id])
+  appointment Appointment? @relation(fields: [appointmentId], references: [id])
+
+  @@map("notifications")
+}
+
+// ENUMS
+enum UserRole {
+  PATIENT
+  DOCTOR
+  ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  PENDING
+  INACTIVE
+  REJECTED
+}
+
+enum AppointmentStatus {
+  SCHEDULED
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+enum MedicalSpecialty {
+  CARDIOLOGIA
+  DERMATOLOGIA
+  CLINICO_GERAL
+  FISIOTERAPIA
+  ENDOCRINOLOGIA
+  ORTOPEDIA
+  GINECOLOGIA
+  PEDIATRIA
+  PSIQUIATRIA
+  OFTALMOLOGIA
+}
+
+enum NotificationType {
+  APPOINTMENT_CONFIRMATION
+  APPOINTMENT_REMINDER
+  APPOINTMENT_CANCELLED
+  DOCTOR_APPROVED
+  DOCTOR_REJECTED
+  DOCTOR_PENDING
+}
+
+enum NotificationStatus {
+  PENDING
+  SENT
+  FAILED
+}
