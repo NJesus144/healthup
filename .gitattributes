@@ -1,0 +1,7 @@
+*.ts linguist-language=TypeScript
+*.tsx linguist-language=TypeScript
+*.js linguist-language=JavaScript
+
+dist/** linguist-vendored
+build/** linguist-vendored
+coverage/** linguist-vendored
