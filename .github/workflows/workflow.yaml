@@ -41,19 +41,5 @@ jobs:
     - name: Run build
       run: npm run build
 
-    - name: Debug - Check structure
-      run: |
-        echo "=== Current directory ==="
-        pwd
-        echo "=== tsconfig.json content ==="
-        cat tsconfig.json
-        echo "=== Source structure ==="
-        find src -name "*.ts" | head -20
-        echo "=== Check specific files ==="
-        ls -la src/shared/helpers/ || echo "helpers folder not found"
-        ls -la src/shared/middlewares/ || echo "middlewares folder not found"
-        echo "=== TypeScript config check ==="
-        npx tsc --showConfig
-
     # - name: Check TypeScript types
     #   run: npx tsc --noEmit --project tsconfig.json
