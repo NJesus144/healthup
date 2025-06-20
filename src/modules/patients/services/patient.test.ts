@@ -1,4 +1,4 @@
-import { FakePatientRepository } from './../../../interfaces/repositories/fake_patient_repository'
+import { FakePatientRepository } from '@/interfaces/repositories/fake_patient_repository'
 import { PatientServiceImp } from './PatientServiceImp'
 
 describe('Patient Service', () => {

@@ -19,7 +19,8 @@ const authenticationMiddleware = createAuthMiddleware(authenticationService)
 router.post('/', (req: Request, res: Response) =>  patientController.create(req, res))
 
 
-router.get('/:id', authenticationMiddleware, (req: AuthenticatedRequest, res: Response) => patientController.profile(req, res))
+// router.get('/profile/:id', authenticationMiddleware, (req: AuthenticatedRequest, res: Response) => patientController.profile(req, res))
+router.get('/me', authenticationMiddleware, (req: AuthenticatedRequest, res: Response) => patientController.me(req, res))
 
 router.put('/:id', authenticationMiddleware, (req: AuthenticatedRequest, res: Response) =>  patientController.update(req, res))
 
