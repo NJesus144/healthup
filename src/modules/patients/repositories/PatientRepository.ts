@@ -6,7 +6,7 @@ import { Patient } from '@/modules/patients/models/Patient'
 import { UserRole, UserStatus } from '@prisma/client'
 
 export interface PrismaPatient {
-  id: number
+  id: string
   name: string
   email: string
   phone: string
@@ -32,7 +32,7 @@ export class PatientRepositoryImp implements PatientRepository {
 
   async getPatientById(id: string): Promise<Patient | null> {
     const patient = await prisma.user.findUnique({
-      where: { id: Number(id) },
+      where: { id },
     })
 
     if (!patient) return null
@@ -45,7 +45,7 @@ export class PatientRepositoryImp implements PatientRepository {
     updatePatientDTO: UpdatePatientDTO,
   ): Promise<Patient> {
     const patient = await prisma.user.update({
-      where: { id: Number(id) },
+      where: { id },
       data: updatePatientDTO,
     })
 

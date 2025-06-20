@@ -1,16 +1,13 @@
-import {
-  BadRequestError,
-  ConflictError,
-  NotFoundError,
-} from '../../../shared/errors/AppError'
+
 import { PatientRepository } from '@/interfaces/repositories/PatientRepository'
 import { PatientService } from '@/interfaces/services/PatientService'
 import { CreatePatientDTO } from '@/modules/patients/dtos/CreatePatientDTO'
 import { UpdatePatientDTO } from '@/modules/patients/dtos/UpdatePatientDTO'
 import { Patient } from '@/modules/patients/models/Patient'
-import { DocumentValidator } from '../../../shared/utils/documentValidator'
 import bcrypt from 'bcrypt'
 import { PrismaPatient } from '@/modules/patients/repositories/PatientRepository'
+import { BadRequestError, ConflictError, NotFoundError } from '@/shared/errors/AppError'
+import { DocumentValidator } from '@/shared/utils/documentValidator'
 
 export class PatientServiceImp implements PatientService {
   constructor(private readonly patientRepository: PatientRepository) {}
