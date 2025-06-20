@@ -6,7 +6,7 @@
   "scripts": {
     "test": "jest",
     "dev": "nodemon --watch src --exec ts-node -r tsconfig-paths/register src/app.ts",
-    "build": "tsc",
+    "build": "tsc --project tsconfig.json && tsc-alias -p tsconfig.json",
     "start": "node dist/app.js",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
@@ -50,6 +50,7 @@
     "supertest": "^7.1.1",
     "ts-jest": "^29.4.0",
     "ts-node": "^10.9.2",
+    "tsc-alias": "^1.8.16",
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.0.0"
   }
