@@ -13,7 +13,20 @@ const updatePatientSchema = z.object({
 export function validateUpdatePatient(
   data: UpdatePatientDTO,
 ): UpdatePatientDTO {
-  const result = updatePatientSchema.safeParse(data)
+  if (!data || Object.keys(data).length === 0) {
+    throw new AppError('No data provided for update', 400)
+  }
+
+  const allowedFields = ['name', 'phone']
+  const filteredData = Object.fromEntries(
+    Object.entries(data).filter(([key]) => allowedFields.includes(key)),
+  )
+
+  if (Object.keys(filteredData).length === 0) {
+    throw new AppError('No valid fields provided for update. Allowed fields: name, phone', 400)
+  }
+
+  const result = updatePatientSchema.safeParse(filteredData)
 
   if (!result.success) {
     const errorMessage = result.error.errors[0]?.message || 'Validation failed'

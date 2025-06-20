@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import { AppError } from '@/shared/errors/AppError'
 
-const idSchema = z.string().uuid('Should be a valid UUID')
+const idSchema = z.string().cuid('Should be a valid UUID')
 
 export function validateId(id: string): string {
   const result = idSchema.safeParse(id)
