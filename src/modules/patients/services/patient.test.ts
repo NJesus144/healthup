@@ -1,4 +1,4 @@
-import { FakePatientRepository } from './../../../interfaces/repositories/fake_patient_repository'
+import { FakePatientRepository } from '@/interfaces/repositories/fake_patient_repository'
 import { PatientServiceImp } from './PatientServiceImp'
 
 describe('Patient Service', () => {
@@ -22,7 +22,7 @@ describe('Patient Service', () => {
       const patient = await patientService.getPatientById('1')
 
       expect(patient).not.toBeNull()
-      expect(patient?.id).toBe(1)
+      expect(patient?.id).toBe('1')
       expect(patient?.name).toBe('João Silva')
     })
   })

@@ -20,7 +20,7 @@ describe('AuthenticationService', () => {
   let authService: AuthenticationServiceImp
 
   const mockPatient = {
-    id: 1,
+    id: '1',
     name: 'João Silva',
     email: 'joao@gmail.com',
     phone: '11999999999',

@@ -8,7 +8,7 @@ import { PrismaPatient } from '@/modules/patients/repositories/PatientRepository
 export class FakePatientRepository implements PatientRepository {
   private patients: PrismaPatient[] = [
     {
-      id: 1,
+      id: '1',
       name: 'João Silva',
       email: 'joao@gmail.com',
       phone: '11999999999',
@@ -22,7 +22,7 @@ export class FakePatientRepository implements PatientRepository {
   async createPatient(data: CreatePatientDTO): Promise<PrismaPatient> {
     const newPatient = {
       ...data,
-      id: Number(this.patients.length + 1),
+      id: String(this.patients.length + 1),
       createdAt: new Date(),
       updatedAt: new Date(),
     }
@@ -31,14 +31,14 @@ export class FakePatientRepository implements PatientRepository {
   }
 
   async getPatientById(id: string): Promise<Patient | null> {
-    return this.patients.find((patient) => patient.id === Number(id)) || null
+    return this.patients.find((patient) => patient.id === id) || null
   }
 
   async updatePatient(
     id: string,
     data: Partial<UpdatePatientDTO>,
   ): Promise<Patient> {
-    const patientIndex = this.patients.findIndex((patient) => patient.id === Number(id))
+    const patientIndex = this.patients.findIndex((patient) => patient.id === id)
     if (patientIndex === -1) {
      throw new NotFoundError('User not found')
     }
