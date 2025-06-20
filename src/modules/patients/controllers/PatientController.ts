@@ -4,6 +4,7 @@ import { validateCreatePatient } from '@/modules/patients/validators/validateCre
 import { responseSuccess } from '@/shared/helpers/responseSuccess'
 import { validateId } from '@/modules/patients/validators/validateId'
 import { validateUpdatePatient } from '@/modules/patients/validators/validateUpdatePatient'
+import { AuthenticatedRequest } from '@/shared/middlewares/authenticationMiddleware'
 
 export class PatientController {
   constructor(private readonly patientService: PatientService) {}
@@ -16,8 +17,16 @@ export class PatientController {
     return responseSuccess(res, patient, 'Patient created successfully', 201)
   }
 
-  async profile(req: Request, res: Response): Promise<Response> {
-    const patientId = validateId(req.body.id)
+  // async profile(req: Request, res: Response): Promise<Response> {
+  //   const patientId = validateId(req.params.id)
+
+  //   const patient = await this.patientService.getPatientById(patientId)
+
+  //   return responseSuccess(res, patient, 'Patient profile retrieved successfully')
+  // }
+
+  async me(req: AuthenticatedRequest, res: Response): Promise<Response> {
+    const patientId = req.user!.sub
 
     const patient = await this.patientService.getPatientById(patientId)
 
