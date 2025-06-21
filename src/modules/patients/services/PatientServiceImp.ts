@@ -1,4 +1,3 @@
-
 import { PatientRepository } from '@/interfaces/repositories/PatientRepository'
 import { PatientService } from '@/interfaces/services/PatientService'
 import { CreatePatientDTO } from '@/modules/patients/dtos/CreatePatientDTO'
@@ -13,8 +12,7 @@ export class PatientServiceImp implements PatientService {
   constructor(private readonly patientRepository: PatientRepository) {}
 
   async createPatient(createPatientDTO: CreatePatientDTO): Promise<Patient> {
-    if (!DocumentValidator.validateCPF(createPatientDTO.cpf))
-      throw new BadRequestError('Invalid CPF format')
+    if (!DocumentValidator.validateCPF(createPatientDTO.cpf)) throw new BadRequestError('Invalid CPF format')
 
     const existingCPF = await this.getPatientByCPF(createPatientDTO.cpf)
 
@@ -46,10 +44,7 @@ export class PatientServiceImp implements PatientService {
     return patient
   }
 
-  async updatePatient(
-    id: string,
-    updatePatientDTO: UpdatePatientDTO,
-  ): Promise<Patient> {
+  async updatePatient(id: string, updatePatientDTO: UpdatePatientDTO): Promise<Patient> {
     const patient = await this.getPatientById(id)
 
     if (!patient) throw new NotFoundError('User not found')

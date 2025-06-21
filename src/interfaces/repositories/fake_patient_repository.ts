@@ -31,16 +31,13 @@ export class FakePatientRepository implements PatientRepository {
   }
 
   async getPatientById(id: string): Promise<Patient | null> {
-    return this.patients.find((patient) => patient.id === id) || null
+    return this.patients.find(patient => patient.id === id) || null
   }
 
-  async updatePatient(
-    id: string,
-    data: Partial<UpdatePatientDTO>,
-  ): Promise<Patient> {
-    const patientIndex = this.patients.findIndex((patient) => patient.id === id)
+  async updatePatient(id: string, data: Partial<UpdatePatientDTO>): Promise<Patient> {
+    const patientIndex = this.patients.findIndex(patient => patient.id === id)
     if (patientIndex === -1) {
-     throw new NotFoundError('User not found')
+      throw new NotFoundError('User not found')
     }
 
     return (this.patients[patientIndex] = {
@@ -51,7 +48,7 @@ export class FakePatientRepository implements PatientRepository {
   }
 
   async findByEmail(email: string): Promise<PrismaPatient | null> {
-    const patient = this.patients.find((patient) => patient.email === email)
+    const patient = this.patients.find(patient => patient.email === email)
     if (!patient) return null
     return {
       ...patient,
@@ -65,6 +62,6 @@ export class FakePatientRepository implements PatientRepository {
   }
 
   async findPatientByCPF(cpf: string): Promise<Patient | null> {
-    return this.patients.find((patient) => patient.cpf === cpf) || null
+    return this.patients.find(patient => patient.cpf === cpf) || null
   }
 }

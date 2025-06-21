@@ -12,10 +12,7 @@ describe('Patient Service', () => {
 
   describe('getPatientById', () => {
     it('should throw NotFoundError when no patient is found', async () => {
-
-      await expect(
-        patientService.getPatientById('non-existing-id'),
-      ).rejects.toThrow('User not found')
+      await expect(patientService.getPatientById('non-existing-id')).rejects.toThrow('User not found')
     })
 
     it('should return a patient when found', async () => {
@@ -37,9 +34,7 @@ describe('Patient Service', () => {
         cpf: '303.387.660-90',
       }
 
-      await expect(
-        patientService.createPatient(existingPatientData),
-      ).rejects.toThrow('Email already exists')
+      await expect(patientService.createPatient(existingPatientData)).rejects.toThrow('Email already exists')
     })
 
     it('should return 400 when trying to create a patient with an invalid CPF', async () => {
@@ -51,9 +46,7 @@ describe('Patient Service', () => {
         cpf: '123456789',
       }
 
-      await expect(
-        patientService.createPatient(invalidPatientData),
-      ).rejects.toThrow('Invalid CPF format')
+      await expect(patientService.createPatient(invalidPatientData)).rejects.toThrow('Invalid CPF format')
     })
 
     it('should return ConflictError 409 when trying to create a patient with an existing CPF', async () => {
@@ -65,9 +58,7 @@ describe('Patient Service', () => {
         cpf: '52998224725',
       }
 
-      await expect(
-        patientService.createPatient(existingPatientCPF),
-      ).rejects.toThrow('CPF already exists')
+      await expect(patientService.createPatient(existingPatientCPF)).rejects.toThrow('CPF already exists')
     })
 
     it('should create a patient with valid data', async () => {
@@ -101,8 +92,8 @@ describe('Patient Service', () => {
 
       const calledWith = createSpy.mock.calls[0][0]
       expect(calledWith.passwordHash).not.toBe('plainPassword')
-      expect(calledWith.passwordHash).toMatch(/^\$2[aby]\$10\$/) 
-      
+      expect(calledWith.passwordHash).toMatch(/^\$2[aby]\$10\$/)
+
       createSpy.mockRestore()
     })
   })
@@ -114,9 +105,7 @@ describe('Patient Service', () => {
         phone: '12334556',
       }
 
-      await expect(
-        patientService.updatePatient('12009', patientData),
-      ).rejects.toThrow('User not found')
+      await expect(patientService.updatePatient('12009', patientData)).rejects.toThrow('User not found')
     })
 
     it('should successfully update an existing patient', async () => {
@@ -142,9 +131,7 @@ describe('Patient Service', () => {
     })
 
     it('should return null when email does not exist', async () => {
-      const patient = await patientService.getPatientByEmail(
-        'nonexistent@gmail.com',
-      )
+      const patient = await patientService.getPatientByEmail('nonexistent@gmail.com')
 
       expect(patient).toBeNull()
     })

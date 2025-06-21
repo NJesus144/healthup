@@ -1,4 +1,3 @@
-
 import { Router, Request, Response } from 'express'
 
 import { errorHandler } from '@/shared/errors/errorHandler'
@@ -16,17 +15,11 @@ const patientService = new PatientServiceImp(patientRepository)
 const authService = new AuthenticationServiceImp(patientService)
 const authController = new AuthenticationController(authService)
 
-router.post('/login', (req: Request, res: Response) =>
-  authController.login(req, res),
-)
+router.post('/login', (req: Request, res: Response) => authController.login(req, res))
 
-router.post('/refresh-token', (req: Request, res: Response) =>
-  authController.refreshToken(req, res),
-)
+router.post('/refresh-token', (req: Request, res: Response) => authController.refreshToken(req, res))
 
-router.post('/logout', (req: Request, res: Response) =>
-  authController.logout(req, res),
-)
+router.post('/logout', (req: Request, res: Response) => authController.logout(req, res))
 
 router.use(errorHandler)
 

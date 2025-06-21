@@ -1,8 +1,5 @@
 import { Request, Response, NextFunction } from 'express'
-import {
-  TokenNotProvidedError,
-  TokenExpiredError,
-} from '@/shared/errors/AppError'
+import { TokenNotProvidedError, TokenExpiredError } from '@/shared/errors/AppError'
 import { AuthenticationService } from '@/interfaces/services/AuthenticationService'
 
 export interface AuthenticatedRequest extends Request {
@@ -15,24 +12,16 @@ export interface AuthenticatedRequest extends Request {
   }
 }
 
-export function createAuthMiddleware(
-  authenticationService: AuthenticationService,
-) {
-  return async (
-    req: AuthenticatedRequest,
-    res: Response,
-    next: NextFunction,
-  ) => {
+export function createAuthMiddleware(authenticationService: AuthenticationService) {
+  return async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
-      const token =
-        req.headers.authorization?.replace('Bearer ', '') ||
-        req.cookies?.accessToken
+      const token = req.headers.authorization?.replace('Bearer ', '') || req.cookies?.accessToken
 
       if (!token) {
         throw new TokenNotProvidedError('Access token not provided')
       }
 
-      const payload = await authenticationService.verifyAccessToken(token) as AuthenticatedRequest['user']
+      const payload = (await authenticationService.verifyAccessToken(token)) as AuthenticatedRequest['user']
       req.user = payload
 
       next()

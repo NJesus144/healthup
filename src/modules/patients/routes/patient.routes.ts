@@ -4,10 +4,7 @@ import { asyncHandler, errorHandler } from '@/shared/errors/errorHandler'
 import { PatientServiceImp } from '@/modules/patients/services/PatientServiceImp'
 // import { InMemoryPatientRepository } from '@/modules/patients/repositories/InMemoryPatientRepository'
 import { AuthenticationServiceImp } from '@/modules/authentication/services/AuthenticationServiceImp'
-import {
-  AuthenticatedRequest,
-  createAuthMiddleware,
-} from '@/shared/middlewares/authenticationMiddleware'
+import { AuthenticatedRequest, createAuthMiddleware } from '@/shared/middlewares/authenticationMiddleware'
 import { PatientRepositoryImp } from '@/modules/patients/repositories/PatientRepository'
 
 const router = Router()
@@ -25,17 +22,13 @@ router.post('/', asyncHandler(patientController.create.bind(patientController)))
 router.get(
   '/me',
   authenticationMiddleware,
-  asyncHandler((req: AuthenticatedRequest, res: Response) =>
-    patientController.me(req, res),
-  ),
+  asyncHandler((req: AuthenticatedRequest, res: Response) => patientController.me(req, res))
 )
 
 router.put(
   '/:id',
   authenticationMiddleware,
-  asyncHandler((req: AuthenticatedRequest, res: Response) =>
-    patientController.update(req, res),
-  ),
+  asyncHandler((req: AuthenticatedRequest, res: Response) => patientController.update(req, res))
 )
 
 router.use(errorHandler)

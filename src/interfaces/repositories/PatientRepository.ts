@@ -3,7 +3,7 @@ import { UpdatePatientDTO } from '@/modules/patients/dtos/UpdatePatientDTO'
 import { Patient } from '@/modules/patients/models/Patient'
 import { PrismaPatient } from '@/modules/patients/repositories/PatientRepository'
 
-export interface PatientRepository{
+export interface PatientRepository {
   createPatient(CreatePatientDTO: CreatePatientDTO): Promise<Patient>
   getPatientById(id: string): Promise<Patient | null>
   updatePatient(id: string, data: UpdatePatientDTO): Promise<Patient>
