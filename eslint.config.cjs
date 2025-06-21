@@ -34,7 +34,7 @@ module.exports = [
       // Regras do TypeScript - mais flexíveis
       '@typescript-eslint/no-unused-vars': 'off', 
       '@typescript-eslint/explicit-function-return-type': 'off',
-      '@typescript-eslint/no-explicit-any': 'warn',
+      '@typescript-eslint/no-explicit-any': 'off',
       '@/prefer-const': 'error',
       '@typescript-eslint/no-unused-imports': 'off',
 
