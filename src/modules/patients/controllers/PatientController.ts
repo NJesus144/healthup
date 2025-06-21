@@ -34,11 +34,11 @@ export class PatientController {
   }
 
   async update(req: AuthenticatedRequest, res: Response): Promise<Response> {
-   const patientId = req.user!.sub
-   const data = validateUpdatePatient(req.body)
-  
-   const patient = await this.patientService.updatePatient(patientId, data)
+    const patientId = req.user!.sub
+    const data = validateUpdatePatient(req.body)
 
-   return responseSuccess(res, patient, 'Patient updated successfully')
+    const patient = await this.patientService.updatePatient(patientId, data)
+
+    return responseSuccess(res, patient, 'Patient updated successfully')
   }
 }

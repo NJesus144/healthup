@@ -40,10 +40,7 @@ export class PatientRepositoryImp implements PatientRepository {
     return this.convertPatientData(patient)
   }
 
-  async updatePatient(
-    id: string,
-    updatePatientDTO: UpdatePatientDTO,
-  ): Promise<Patient> {
+  async updatePatient(id: string, updatePatientDTO: UpdatePatientDTO): Promise<Patient> {
     const patient = await prisma.user.update({
       where: { id },
       data: updatePatientDTO,
@@ -64,7 +61,7 @@ export class PatientRepositoryImp implements PatientRepository {
       updatedAt: patient.updatedAt,
       createdAt: patient.createdAt,
     }
-   }
+  }
 
   async findPatientByCPF(cpf: string): Promise<Patient | null> {
     const patient = await prisma.user.findUnique({

@@ -40,8 +40,8 @@ model User {
 }
 
 model DoctorAvailability {
- id String @id @default(cuid())
-  doctorId String    @map("doctor_id")
+  id       String @id @default(cuid())
+  doctorId String @map("doctor_id")
   weekday  Int
   time     String @db.VarChar(5) // formato HH:MM
 
@@ -56,7 +56,7 @@ model DoctorAvailability {
 
 model BlockedDate {
   id       String   @id @default(cuid())
-  doctorId String      @map("doctor_id")
+  doctorId String   @map("doctor_id")
   date     DateTime @db.Date
   reason   String?  @db.VarChar(255)
 
@@ -69,13 +69,13 @@ model BlockedDate {
 }
 
 model Appointment {
-  id        String             @id @default(cuid())
-  patientId String             @map("patient_id")
-  doctorId  String             @map("doctor_id")
-  date      DateTime           @db.Date
-  time      String             @db.VarChar(5)
+  id        String            @id @default(cuid())
+  patientId String            @map("patient_id")
+  doctorId  String            @map("doctor_id")
+  date      DateTime          @db.Date
+  time      String            @db.VarChar(5)
   notes     String?
-  status    AppointmentStatus  @default(SCHEDULED)
+  status    AppointmentStatus @default(SCHEDULED)
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -90,8 +90,8 @@ model Appointment {
 
 model Notification {
   id            String             @id @default(cuid())
-  userId        String                @map("user_id")
-  appointmentId String?               @map("appointment_id")
+  userId        String             @map("user_id")
+  appointmentId String?            @map("appointment_id")
   type          NotificationType
   status        NotificationStatus @default(PENDING)
   title         String             @db.VarChar(255)

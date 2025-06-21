@@ -2,20 +2,13 @@ import bcrypt from 'bcrypt'
 import { AuthenticationService } from '@/interfaces/services/AuthenticationService'
 import { PatientService } from '@/interfaces/services/PatientService'
 import jwt from 'jsonwebtoken'
-import {
-  InvalidCredentialsError,
-  InvalidRefreshTokenError,
-  NotFoundError,
-} from '@/shared/errors/AppError'
+import { InvalidCredentialsError, InvalidRefreshTokenError, NotFoundError } from '@/shared/errors/AppError'
 import { Patient } from '@/modules/patients/models/Patient'
 
 export class AuthenticationServiceImp implements AuthenticationService {
   constructor(private readonly patientService: PatientService) {}
 
-  async login(
-    email: string,
-    password: string,
-  ): Promise<{ access_token: string; refresh_token: string }> {
+  async login(email: string, password: string): Promise<{ access_token: string; refresh_token: string }> {
     const patient = await this.patientService.getPatientByEmail(email)
 
     if (!patient || !bcrypt.compareSync(password, patient.passwordHash)) {
@@ -28,9 +21,7 @@ export class AuthenticationServiceImp implements AuthenticationService {
     return { access_token: accessToken, refresh_token: refreshToken }
   }
 
-  async refreshToken(
-    refreshToken: string,
-  ): Promise<{ access_token: string; refresh_token: string }> {
+  async refreshToken(refreshToken: string): Promise<{ access_token: string; refresh_token: string }> {
     try {
       const payload = this.verifyRefreshToken(refreshToken)
       const patient = await this.patientService.getPatientById(payload.sub)
@@ -62,7 +53,7 @@ export class AuthenticationServiceImp implements AuthenticationService {
         expiresIn: process.env.JWT_ACCESS_TOKEN_EXPIRES_IN as any,
         subject: patient.id?.toString(),
         algorithm: 'RS256',
-      },
+      }
     )
   }
 
@@ -77,7 +68,7 @@ export class AuthenticationServiceImp implements AuthenticationService {
         expiresIn: process.env.JWT_REFRESH_TOKEN_EXPIRES_IN as any,
         subject: patient.id?.toString(),
         algorithm: 'RS256',
-      },
+      }
     )
   }
 

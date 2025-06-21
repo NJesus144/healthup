@@ -65,9 +65,7 @@ describe('AuthenticationService', () => {
       mockBcrypt.compareSync.mockReturnValue(true)
 
       const mockSign = mockJwt.sign as unknown as jest.Mock<string, any[]>
-      mockSign
-        .mockReturnValueOnce('access-token')
-        .mockReturnValueOnce('refresh-token')
+      mockSign.mockReturnValueOnce('access-token').mockReturnValueOnce('refresh-token')
 
       const result = await authService.login(email, password)
 
@@ -76,10 +74,7 @@ describe('AuthenticationService', () => {
         refresh_token: 'refresh-token',
       })
       expect(mockPatientService.getPatientByEmail).toHaveBeenCalledWith(email)
-      expect(mockBcrypt.compareSync).toHaveBeenCalledWith(
-        password,
-        mockPrismaPatient.passwordHash,
-      )
+      expect(mockBcrypt.compareSync).toHaveBeenCalledWith(password, mockPrismaPatient.passwordHash)
       expect(mockJwt.sign).toHaveBeenCalledTimes(2)
     })
   })
@@ -90,9 +85,7 @@ describe('AuthenticationService', () => {
 
     mockPatientService.getPatientByEmail.mockResolvedValue(null)
 
-    await expect(authService.login(email, password)).rejects.toThrow(
-      'Invalid credentials',
-    )
+    await expect(authService.login(email, password)).rejects.toThrow('Invalid credentials')
     expect(mockPatientService.getPatientByEmail).toHaveBeenCalledWith(email)
     expect(mockBcrypt.compareSync).not.toHaveBeenCalled()
   })
@@ -104,14 +97,9 @@ describe('AuthenticationService', () => {
     mockPatientService.getPatientByEmail.mockResolvedValue(mockPrismaPatient)
     mockBcrypt.compareSync.mockReturnValue(false)
 
-    await expect(authService.login(email, password)).rejects.toThrow(
-      'Invalid credentials',
-    )
+    await expect(authService.login(email, password)).rejects.toThrow('Invalid credentials')
     expect(mockPatientService.getPatientByEmail).toHaveBeenCalledWith(email)
-    expect(mockBcrypt.compareSync).toHaveBeenCalledWith(
-      password,
-      mockPrismaPatient.passwordHash,
-    )
+    expect(mockBcrypt.compareSync).toHaveBeenCalledWith(password, mockPrismaPatient.passwordHash)
   })
 
   it('should throw InvalidCredentialsError when patient exists but has no passwordHash', async () => {
@@ -119,13 +107,9 @@ describe('AuthenticationService', () => {
     const password = 'senha123'
     const patientWithoutPassword = { ...mockPrismaPatient, passwordHash: null }
 
-    mockPatientService.getPatientByEmail.mockResolvedValue(
-      patientWithoutPassword as any,
-    )
+    mockPatientService.getPatientByEmail.mockResolvedValue(patientWithoutPassword as any)
 
-    await expect(authService.login(email, password)).rejects.toThrow(
-      'Invalid credentials',
-    )
+    await expect(authService.login(email, password)).rejects.toThrow('Invalid credentials')
   })
 
   describe('refreshToken', () => {
@@ -137,9 +121,7 @@ describe('AuthenticationService', () => {
       mockVerify.mockReturnValue(mockTokenPayload)
       mockPatientService.getPatientById.mockResolvedValue(mockPatient)
 
-      mockSign
-        .mockReturnValueOnce('new-access-token')
-        .mockReturnValueOnce('new-refresh-token')
+      mockSign.mockReturnValueOnce('new-access-token').mockReturnValueOnce('new-refresh-token')
 
       const result = await authService.refreshToken(refreshToken)
 
@@ -147,14 +129,8 @@ describe('AuthenticationService', () => {
         access_token: 'new-access-token',
         refresh_token: 'new-refresh-token',
       })
-      expect(mockJwt.verify).toHaveBeenCalledWith(
-        refreshToken,
-        process.env.JWT_PUBLIC_KEY,
-        { algorithms: ['RS256'] },
-      )
-      expect(mockPatientService.getPatientById).toHaveBeenCalledWith(
-        mockTokenPayload.sub,
-      )
+      expect(mockJwt.verify).toHaveBeenCalledWith(refreshToken, process.env.JWT_PUBLIC_KEY, { algorithms: ['RS256'] })
+      expect(mockPatientService.getPatientById).toHaveBeenCalledWith(mockTokenPayload.sub)
       expect(mockJwt.sign).toHaveBeenCalledTimes(2)
     })
 
@@ -165,14 +141,8 @@ describe('AuthenticationService', () => {
         throw new Error('Invalid token')
       })
 
-      await expect(authService.refreshToken(invalidToken)).rejects.toThrow(
-        'Invalid refresh token',
-      )
-      expect(mockJwt.verify).toHaveBeenCalledWith(
-        invalidToken,
-        process.env.JWT_PUBLIC_KEY,
-        { algorithms: ['RS256'] },
-      )
+      await expect(authService.refreshToken(invalidToken)).rejects.toThrow('Invalid refresh token')
+      expect(mockJwt.verify).toHaveBeenCalledWith(invalidToken, process.env.JWT_PUBLIC_KEY, { algorithms: ['RS256'] })
     })
 
     it('should throw InvalidRefreshTokenError when patient is not found', async () => {
@@ -181,17 +151,9 @@ describe('AuthenticationService', () => {
       mockVerify.mockReturnValue(mockTokenPayload)
       mockPatientService.getPatientById.mockResolvedValue(null)
 
-      await expect(authService.refreshToken(refreshToken)).rejects.toThrow(
-        'Invalid refresh token',
-      )
-      expect(mockJwt.verify).toHaveBeenCalledWith(
-        refreshToken,
-        process.env.JWT_PUBLIC_KEY,
-        { algorithms: ['RS256'] },
-      )
-      expect(mockPatientService.getPatientById).toHaveBeenCalledWith(
-        mockTokenPayload.sub,
-      )
+      await expect(authService.refreshToken(refreshToken)).rejects.toThrow('Invalid refresh token')
+      expect(mockJwt.verify).toHaveBeenCalledWith(refreshToken, process.env.JWT_PUBLIC_KEY, { algorithms: ['RS256'] })
+      expect(mockPatientService.getPatientById).toHaveBeenCalledWith(mockTokenPayload.sub)
     })
 
     it('should throw InvalidRefreshTokenError when jwt.verify throws any error', async () => {
@@ -201,9 +163,7 @@ describe('AuthenticationService', () => {
         throw new jwt.TokenExpiredError('Token expired', new Date())
       })
 
-      await expect(authService.refreshToken(refreshToken)).rejects.toThrow(
-        'Invalid refresh token',
-      )
+      await expect(authService.refreshToken(refreshToken)).rejects.toThrow('Invalid refresh token')
     })
   })
 
@@ -226,7 +186,7 @@ describe('AuthenticationService', () => {
           expiresIn: process.env.JWT_ACCESS_TOKEN_EXPIRES_IN,
           subject: mockPatient.id?.toString(),
           algorithm: 'RS256',
-        },
+        }
       )
     })
   })
@@ -251,7 +211,7 @@ describe('AuthenticationService', () => {
           expiresIn: process.env.JWT_REFRESH_TOKEN_EXPIRES_IN,
           subject: mockPatient.id?.toString(),
           algorithm: 'RS256',
-        },
+        }
       )
     })
   })
@@ -266,11 +226,7 @@ describe('AuthenticationService', () => {
       const result = authService.verifyAccessToken(token)
 
       expect(result).toEqual(mockTokenPayload)
-      expect(mockJwt.verify).toHaveBeenCalledWith(
-        token,
-        process.env.JWT_PUBLIC_KEY,
-        { algorithms: ['RS256'] },
-      )
+      expect(mockJwt.verify).toHaveBeenCalledWith(token, process.env.JWT_PUBLIC_KEY, { algorithms: ['RS256'] })
     })
 
     it('should throw error when token is invalid', () => {
@@ -279,14 +235,8 @@ describe('AuthenticationService', () => {
         throw new Error('Invalid token')
       })
 
-      expect(() => authService.verifyAccessToken(invalidToken)).toThrow(
-        'Invalid token',
-      )
-      expect(mockJwt.verify).toHaveBeenCalledWith(
-        invalidToken,
-        process.env.JWT_PUBLIC_KEY,
-        { algorithms: ['RS256'] },
-      )
+      expect(() => authService.verifyAccessToken(invalidToken)).toThrow('Invalid token')
+      expect(mockJwt.verify).toHaveBeenCalledWith(invalidToken, process.env.JWT_PUBLIC_KEY, { algorithms: ['RS256'] })
     })
   })
 
@@ -300,11 +250,7 @@ describe('AuthenticationService', () => {
       const result = authService.verifyRefreshToken(token)
 
       expect(result).toEqual(mockTokenPayload)
-      expect(mockJwt.verify).toHaveBeenCalledWith(
-        token,
-        process.env.JWT_PUBLIC_KEY,
-        { algorithms: ['RS256'] },
-      )
+      expect(mockJwt.verify).toHaveBeenCalledWith(token, process.env.JWT_PUBLIC_KEY, { algorithms: ['RS256'] })
     })
 
     it('should throw error when token is invalid', () => {
@@ -314,14 +260,8 @@ describe('AuthenticationService', () => {
         throw error
       })
 
-      expect(() => authService.verifyRefreshToken(invalidToken)).toThrow(
-        'Invalid token',
-      )
-      expect(mockJwt.verify).toHaveBeenCalledWith(
-        invalidToken,
-        process.env.JWT_PUBLIC_KEY,
-        { algorithms: ['RS256'] },
-      )
+      expect(() => authService.verifyRefreshToken(invalidToken)).toThrow('Invalid token')
+      expect(mockJwt.verify).toHaveBeenCalledWith(invalidToken, process.env.JWT_PUBLIC_KEY, { algorithms: ['RS256'] })
     })
   })
 })

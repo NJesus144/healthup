@@ -3,10 +3,7 @@ import { validateLoginData } from '@/modules/authentication/validators/validateL
 import { Request, Response } from 'express'
 import { LoginDTO } from '@/modules/authentication/dtos/LoginDTO'
 import { responseSuccess } from '@/shared/helpers/responseSuccess'
-import {
-  TokenExpiredError,
-  TokenNotProvidedError,
-} from '@/shared/errors/AppError'
+import { TokenExpiredError, TokenNotProvidedError } from '@/shared/errors/AppError'
 import jwt from 'jsonwebtoken'
 
 export class AuthenticationController {
@@ -24,10 +21,7 @@ export class AuthenticationController {
   }
 
   async refreshToken(req: Request, res: Response): Promise<Response> {
-    const refreshToken =
-      req.body?.refresh_token ||
-      req.headers.authorization?.replace('Bearer ', '') ||
-      req.cookies?.refreshToken
+    const refreshToken = req.body?.refresh_token || req.headers.authorization?.replace('Bearer ', '') || req.cookies?.refreshToken
 
     if (!refreshToken) {
       throw new TokenNotProvidedError('Refresh token not provided')
@@ -60,20 +54,17 @@ export class AuthenticationController {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
-      maxAge: 15 * 60 * 1000, // 15 minutes
+      maxAge: 15 * 60 * 1000,
       path: '/',
     })
   }
 
-  private generateRefreshTokenCookie(
-    res: Response,
-    refreshToken: string,
-  ): void {
+  private generateRefreshTokenCookie(res: Response, refreshToken: string): void {
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      maxAge: 7 * 24 * 60 * 60 * 1000,
       path: '/refresh-token',
     })
   }
