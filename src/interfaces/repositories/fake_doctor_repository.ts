@@ -1,5 +1,5 @@
 import { DoctorRepository } from '@/interfaces/repositories/DoctorRepository'
-import { CreateDoctorDTO } from '@/modules/doctors/dtos/CreateDoctorDTO'
+import { CreateDoctorDTO } from '../../modules/doctors/dtos/CreateDoctorDTO'
 import { UpdateDoctorDTO } from '@/modules/doctors/dtos/UpdateDoctorDTO'
 import { Doctor } from '@/modules/doctors/models/Doctor'
 import { PrismaDoctor } from '@/modules/doctors/repositories/DoctorRepositoryImp'
