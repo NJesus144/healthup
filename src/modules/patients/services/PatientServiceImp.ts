@@ -3,10 +3,10 @@ import { PatientService } from '@/interfaces/services/PatientService'
 import { CreatePatientDTO } from '@/modules/patients/dtos/CreatePatientDTO'
 import { UpdatePatientDTO } from '@/modules/patients/dtos/UpdatePatientDTO'
 import { Patient } from '@/modules/patients/models/Patient'
-import bcrypt from 'bcrypt'
 import { PrismaPatient } from '@/modules/patients/repositories/PatientRepository'
 import { BadRequestError, ConflictError, NotFoundError } from '@/shared/errors/AppError'
 import { DocumentValidator } from '@/shared/utils/documentValidator'
+import bcrypt from 'bcrypt'
 
 export class PatientServiceImp implements PatientService {
   constructor(private readonly patientRepository: PatientRepository) {}
@@ -14,7 +14,7 @@ export class PatientServiceImp implements PatientService {
   async createPatient(createPatientDTO: CreatePatientDTO): Promise<Patient> {
     if (!DocumentValidator.validateCPF(createPatientDTO.cpf)) throw new BadRequestError('Invalid CPF format')
 
-    const existingCPF = await this.getPatientByCPF(createPatientDTO.cpf)
+    const existingCPF = await this.patientRepository.findPatientByCPF(createPatientDTO.cpf)
 
     if (existingCPF) throw new ConflictError('CPF already exists')
 
@@ -50,9 +50,5 @@ export class PatientServiceImp implements PatientService {
     if (!patient) throw new NotFoundError('User not found')
 
     return await this.patientRepository.updatePatient(id, updatePatientDTO)
-  }
-
-  private async getPatientByCPF(cpf: string): Promise<Patient | null> {
-    return this.patientRepository.findPatientByCPF(cpf)
   }
 }
