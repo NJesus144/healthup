@@ -14,6 +14,7 @@ export interface PrismaDoctor {
   specialty: MedicalSpecialty | null
   status: UserStatus
   passwordHash: string
+  crm: string | null
   updatedAt: Date
   createdAt: Date
 }
