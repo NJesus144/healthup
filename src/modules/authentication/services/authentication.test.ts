@@ -1,17 +1,17 @@
-import { PatientService } from '@/interfaces/services/PatientService'
 import { AuthenticationServiceImp } from './AuthenticationServiceImp'
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
+import { AuthenticationStrategy } from '@/interfaces/auth/AuthenticationStrategy'
+import { AuthType } from '@/interfaces/auth/AuthenticableEntity'
 
 jest.mock('bcrypt')
 jest.mock('jsonwebtoken')
 
-const mockPatientService = {
-  getPatientByEmail: jest.fn(),
-  getPatientById: jest.fn(),
-  createPatient: jest.fn(),
-  updatePatient: jest.fn(),
-} as jest.Mocked<PatientService>
+const mockUserService = {
+  findByEmail: jest.fn(),
+  findById: jest.fn(),
+  getUserType: jest.fn(),
+} as jest.Mocked<AuthenticationStrategy>
 
 const mockBcrypt = bcrypt as jest.Mocked<typeof bcrypt>
 const mockJwt = jwt as jest.Mocked<typeof jwt>
@@ -19,16 +19,17 @@ const mockJwt = jwt as jest.Mocked<typeof jwt>
 describe('AuthenticationService', () => {
   let authService: AuthenticationServiceImp
 
-  const mockPatient = {
+  const mockUser = {
     id: '1',
     name: 'João Silva',
     email: 'joao@gmail.com',
     phone: '11999999999',
     cpf: '52998224725',
+    passwordHash: 'hashedpassword123',
   }
 
-  const mockPrismaPatient = {
-    ...mockPatient,
+  const mockPrismaUser = {
+    ...mockUser,
     passwordHash: '$2b$10$hashedpassword123',
     createdAt: new Date(),
     updatedAt: new Date(),
@@ -43,7 +44,7 @@ describe('AuthenticationService', () => {
   }
 
   beforeEach(() => {
-    authService = new AuthenticationServiceImp(mockPatientService)
+    authService = new AuthenticationServiceImp(mockUserService)
     jest.clearAllMocks()
 
     process.env.JWT_PRIVATE_KEY = 'private-key'
@@ -61,7 +62,7 @@ describe('AuthenticationService', () => {
       const email = 'jaoo@gmail.com'
       const password = 'senha123'
 
-      mockPatientService.getPatientByEmail.mockResolvedValue(mockPrismaPatient)
+      mockUserService.findByEmail.mockResolvedValue(mockPrismaUser)
       mockBcrypt.compareSync.mockReturnValue(true)
 
       const mockSign = mockJwt.sign as unknown as jest.Mock<string, any[]>
@@ -73,8 +74,8 @@ describe('AuthenticationService', () => {
         access_token: 'access-token',
         refresh_token: 'refresh-token',
       })
-      expect(mockPatientService.getPatientByEmail).toHaveBeenCalledWith(email)
-      expect(mockBcrypt.compareSync).toHaveBeenCalledWith(password, mockPrismaPatient.passwordHash)
+      expect(mockUserService.findByEmail).toHaveBeenCalledWith(email)
+      expect(mockBcrypt.compareSync).toHaveBeenCalledWith(password, mockPrismaUser.passwordHash)
       expect(mockJwt.sign).toHaveBeenCalledTimes(2)
     })
   })
@@ -83,10 +84,10 @@ describe('AuthenticationService', () => {
     const email = 'nonexistent@gmail.com'
     const password = 'senha123'
 
-    mockPatientService.getPatientByEmail.mockResolvedValue(null)
+    mockUserService.findByEmail.mockResolvedValue(null)
 
     await expect(authService.login(email, password)).rejects.toThrow('Invalid credentials')
-    expect(mockPatientService.getPatientByEmail).toHaveBeenCalledWith(email)
+    expect(mockUserService.findByEmail).toHaveBeenCalledWith(email)
     expect(mockBcrypt.compareSync).not.toHaveBeenCalled()
   })
 
@@ -94,20 +95,20 @@ describe('AuthenticationService', () => {
     const email = 'joao@gmail.com'
     const password = 'wrongpassword'
 
-    mockPatientService.getPatientByEmail.mockResolvedValue(mockPrismaPatient)
+    mockUserService.findByEmail.mockResolvedValue(mockPrismaUser)
     mockBcrypt.compareSync.mockReturnValue(false)
 
     await expect(authService.login(email, password)).rejects.toThrow('Invalid credentials')
-    expect(mockPatientService.getPatientByEmail).toHaveBeenCalledWith(email)
-    expect(mockBcrypt.compareSync).toHaveBeenCalledWith(password, mockPrismaPatient.passwordHash)
+    expect(mockUserService.findByEmail).toHaveBeenCalledWith(email)
+    expect(mockBcrypt.compareSync).toHaveBeenCalledWith(password, mockPrismaUser.passwordHash)
   })
 
   it('should throw InvalidCredentialsError when patient exists but has no passwordHash', async () => {
     const email = 'joao@gmail.com'
     const password = 'senha123'
-    const patientWithoutPassword = { ...mockPrismaPatient, passwordHash: null }
+    const patientWithoutPassword = { ...mockPrismaUser, passwordHash: null }
 
-    mockPatientService.getPatientByEmail.mockResolvedValue(patientWithoutPassword as any)
+    mockUserService.findByEmail.mockResolvedValue(patientWithoutPassword as any)
 
     await expect(authService.login(email, password)).rejects.toThrow('Invalid credentials')
   })
@@ -119,7 +120,7 @@ describe('AuthenticationService', () => {
       const refreshToken = 'valid-refresh-token'
 
       mockVerify.mockReturnValue(mockTokenPayload)
-      mockPatientService.getPatientById.mockResolvedValue(mockPatient)
+      mockUserService.findById.mockResolvedValue(mockUser)
 
       mockSign.mockReturnValueOnce('new-access-token').mockReturnValueOnce('new-refresh-token')
 
@@ -130,7 +131,7 @@ describe('AuthenticationService', () => {
         refresh_token: 'new-refresh-token',
       })
       expect(mockJwt.verify).toHaveBeenCalledWith(refreshToken, process.env.JWT_PUBLIC_KEY, { algorithms: ['RS256'] })
-      expect(mockPatientService.getPatientById).toHaveBeenCalledWith(mockTokenPayload.sub)
+      expect(mockUserService.findById).toHaveBeenCalledWith(mockTokenPayload.sub)
       expect(mockJwt.sign).toHaveBeenCalledTimes(2)
     })
 
@@ -149,11 +150,11 @@ describe('AuthenticationService', () => {
       const refreshToken = 'valid-refresh-token'
 
       mockVerify.mockReturnValue(mockTokenPayload)
-      mockPatientService.getPatientById.mockResolvedValue(null)
+      mockUserService.findById.mockResolvedValue(null)
 
       await expect(authService.refreshToken(refreshToken)).rejects.toThrow('Invalid refresh token')
       expect(mockJwt.verify).toHaveBeenCalledWith(refreshToken, process.env.JWT_PUBLIC_KEY, { algorithms: ['RS256'] })
-      expect(mockPatientService.getPatientById).toHaveBeenCalledWith(mockTokenPayload.sub)
+      expect(mockUserService.findById).toHaveBeenCalledWith(mockTokenPayload.sub)
     })
 
     it('should throw InvalidRefreshTokenError when jwt.verify throws any error', async () => {
@@ -173,18 +174,19 @@ describe('AuthenticationService', () => {
       const expectedToken = 'generated-access-token'
       mockSign.mockReturnValue(expectedToken)
 
-      const result = authService.generateAccessToken(mockPatient)
+      const result = authService.generateAccessToken(mockUser, AuthType.PATIENT)
 
       expect(result).toBe(expectedToken)
       expect(mockJwt.sign).toHaveBeenCalledWith(
         {
-          name: mockPatient.name,
-          email: mockPatient.email,
+          name: mockUser.name,
+          email: mockUser.email,
+          userType: AuthType.PATIENT,
         },
         process.env.JWT_PRIVATE_KEY,
         {
           expiresIn: process.env.JWT_ACCESS_TOKEN_EXPIRES_IN,
-          subject: mockPatient.id?.toString(),
+          subject: mockUser.id?.toString(),
           algorithm: 'RS256',
         }
       )
@@ -198,18 +200,19 @@ describe('AuthenticationService', () => {
       const expectedToken = 'generated-refresh-token'
       mockSign.mockReturnValue(expectedToken)
 
-      const result = authService.generateRefreshToken(mockPatient)
+      const result = authService.generateRefreshToken(mockUser, AuthType.DOCTOR)
 
       expect(result).toBe(expectedToken)
       expect(mockJwt.sign).toHaveBeenCalledWith(
         {
-          name: mockPatient.name,
-          email: mockPatient.email,
+          name: mockUser.name,
+          email: mockUser.email,
+          userType: AuthType.DOCTOR,
         },
         process.env.JWT_PRIVATE_KEY,
         {
           expiresIn: process.env.JWT_REFRESH_TOKEN_EXPIRES_IN,
-          subject: mockPatient.id?.toString(),
+          subject: mockUser.id?.toString(),
           algorithm: 'RS256',
         }
       )
