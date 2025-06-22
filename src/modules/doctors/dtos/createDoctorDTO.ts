@@ -6,6 +6,7 @@ export interface CreateDoctorDTO {
   passwordHash: string
   role?: UserRole
   status?: UserStatus
+  phone: string
   cpf: string
   crm: string
   specialty: MedicalSpecialty
