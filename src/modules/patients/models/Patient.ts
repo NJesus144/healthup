@@ -1,7 +1,7 @@
 import { UserRole, UserStatus } from '@prisma/client'
 
 export interface Patient {
-  id?: string
+  id: string
   name: string
   email: string
   phone: string

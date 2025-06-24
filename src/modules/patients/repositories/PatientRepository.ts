@@ -20,12 +20,9 @@ export interface PrismaPatient {
 
 export class PatientRepositoryImp implements PatientRepository {
   async createPatient(createPatientDTO: CreatePatientDTO): Promise<Patient> {
-    console.log('Creating patient with data:', createPatientDTO)
     const patient = await prisma.user.create({
       data: createPatientDTO,
     })
-
-    console.log('Created patient:', patient)
 
     return this.convertPatientData(patient)
   }

@@ -1,22 +1,22 @@
-import bcrypt from 'bcrypt'
 import { AuthenticationService } from '@/interfaces/services/AuthenticationService'
-import { PatientService } from '@/interfaces/services/PatientService'
-import jwt from 'jsonwebtoken'
 import { InvalidCredentialsError, InvalidRefreshTokenError, NotFoundError } from '@/shared/errors/AppError'
-import { Patient } from '@/modules/patients/models/Patient'
+import { AuthenticationStrategy } from '@/interfaces/auth/AuthenticationStrategy'
+import { AuthenticatableEntity, AuthType } from '@/interfaces/auth/AuthenticableEntity'
+import jwt from 'jsonwebtoken'
+import bcrypt from 'bcrypt'
 
 export class AuthenticationServiceImp implements AuthenticationService {
-  constructor(private readonly patientService: PatientService) {}
+  constructor(private readonly authStrategy: AuthenticationStrategy) {}
 
   async login(email: string, password: string): Promise<{ access_token: string; refresh_token: string }> {
-    const patient = await this.patientService.getPatientByEmail(email)
+    const user = await this.authStrategy.findByEmail(email)
 
-    if (!patient || !bcrypt.compareSync(password, patient.passwordHash)) {
+    if (!user || !bcrypt.compareSync(password, user.passwordHash)) {
       throw new InvalidCredentialsError()
     }
 
-    const accessToken = this.generateAccessToken(patient)
-    const refreshToken = this.generateRefreshToken(patient)
+    const accessToken = this.generateAccessToken(user, this.authStrategy.getUserType())
+    const refreshToken = this.generateRefreshToken(user, this.authStrategy.getUserType())
 
     return { access_token: accessToken, refresh_token: refreshToken }
   }
@@ -24,14 +24,14 @@ export class AuthenticationServiceImp implements AuthenticationService {
   async refreshToken(refreshToken: string): Promise<{ access_token: string; refresh_token: string }> {
     try {
       const payload = this.verifyRefreshToken(refreshToken)
-      const patient = await this.patientService.getPatientById(payload.sub)
+      const user = await this.authStrategy.findById(payload.sub)
 
-      if (!patient) {
-        throw new NotFoundError('Patient not found')
+      if (!user) {
+        throw new NotFoundError('User not found')
       }
 
-      const newAccessToken = this.generateAccessToken(patient)
-      const newRefreshToken = this.generateRefreshToken(patient)
+      const newAccessToken = this.generateAccessToken(user, this.authStrategy.getUserType())
+      const newRefreshToken = this.generateRefreshToken(user, this.authStrategy.getUserType())
 
       return {
         access_token: newAccessToken,
@@ -42,31 +42,33 @@ export class AuthenticationServiceImp implements AuthenticationService {
     }
   }
 
-  generateAccessToken(patient: Patient): string {
+  generateAccessToken(user: AuthenticatableEntity, userType: AuthType): string {
     return jwt.sign(
       {
-        name: patient.name,
-        email: patient.email,
+        name: user.name,
+        email: user.email,
+        userType,
       },
       process.env.JWT_PRIVATE_KEY as string,
       {
         expiresIn: process.env.JWT_ACCESS_TOKEN_EXPIRES_IN as any,
-        subject: patient.id?.toString(),
+        subject: user.id?.toString(),
         algorithm: 'RS256',
       }
     )
   }
 
-  generateRefreshToken(patient: Patient): string {
+  generateRefreshToken(user: AuthenticatableEntity, userType: AuthType): string {
     return jwt.sign(
       {
-        name: patient.name,
-        email: patient.email,
+        name: user.name,
+        email: user.email,
+        userType,
       },
       process.env.JWT_PRIVATE_KEY as string,
       {
         expiresIn: process.env.JWT_REFRESH_TOKEN_EXPIRES_IN as any,
-        subject: patient.id?.toString(),
+        subject: user.id?.toString(),
         algorithm: 'RS256',
       }
     )

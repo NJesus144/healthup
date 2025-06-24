@@ -4,8 +4,10 @@ import helmet from 'helmet'
 import dotenv from 'dotenv'
 import { PrismaClient } from '@prisma/client'
 import patientRoutes from '../src/modules/patients/routes/patient.routes'
+import doctorRoutes from '../src/modules/doctors/routes/doctor.routes'
 import { errorHandler } from '@/shared/errors/errorHandler'
-import authenticationRoutes from '@/modules/authentication/routes/authentication.route'
+import patientAuthRoutes from '@/modules/authentication/routes/authPatients.routes'
+import doctorAuthRoutes from '@/modules/authentication/routes/authDoctor.routes'
 
 dotenv.config()
 
@@ -31,8 +33,10 @@ app.get('/', (req, res) => {
   })
 })
 
-app.use('/authentication', authenticationRoutes)
+app.use('/auth/patients', patientAuthRoutes)
+app.use('/auth/doctors', doctorAuthRoutes)
 app.use('/patients', patientRoutes)
+app.use('/doctors', doctorRoutes)
 
 app.use(errorHandler)
 

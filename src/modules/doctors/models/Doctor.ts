@@ -1,12 +1,14 @@
 import { MedicalSpecialty, UserRole, UserStatus } from '@prisma/client'
 
-export interface CreateDoctorDTO {
+export interface Doctor {
+  id: string
   name: string
   email: string
-  passwordHash: string
+  phone: string
+  cpf: string
   role?: UserRole
   status?: UserStatus
-  cpf: string
-  crm: string
-  specialty: MedicalSpecialty
+  updatedAt?: Date
+  createdAt?: Date
+  specialty: MedicalSpecialty | null
 }
