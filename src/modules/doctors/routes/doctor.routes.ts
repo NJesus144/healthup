@@ -3,34 +3,35 @@ import { DoctorServiceImp } from '@/modules/doctors/services/DoctorServiceImp'
 import { asyncHandler, errorHandler } from '@/shared/errors/errorHandler'
 import { Response, Router } from 'express'
 import { DoctorRepositoryImp } from '@/modules/doctors/repositories/DoctorRepositoryImp'
-import { AuthenticatedRequest, createAuthMiddleware } from '@/shared/middlewares/authenticationMiddleware'
+import { AuthenticatedRequest, createDoctorOnlyMiddleware } from '@/shared/middlewares/authenticationMiddleware'
 import { AuthenticationServiceImp } from '@/modules/authentication/services/AuthenticationServiceImp'
-import { DoctorAuthenticationStrategy } from '@/interfaces/auth/DoctorAuthenticationStrategy'
+import { prisma } from '@/config/prisma'
+import { UserRepositoryImp } from '@/interfaces/repositories/UserRepository'
 
 const router = Router()
 
+const userRepository = new UserRepositoryImp(prisma)
 const doctorRepository = new DoctorRepositoryImp()
+
+const authenticationService = new AuthenticationServiceImp(userRepository)
 const doctorService = new DoctorServiceImp(doctorRepository)
 
-const doctorAuthStrategy = new DoctorAuthenticationStrategy(doctorService)
-
-const authenticationService = new AuthenticationServiceImp(doctorAuthStrategy)
-
 const doctorController = new DoctorController(doctorService)
-const authenticationMiddleware = createAuthMiddleware(authenticationService)
+
+const doctorOnlyMiddleware = createDoctorOnlyMiddleware(authenticationService)
 
 router.post('/', asyncHandler(doctorController.create.bind(doctorController)))
 router.get('/', asyncHandler(doctorController.getAllDoctors.bind(doctorController)))
 
 router.get(
   '/me',
-  authenticationMiddleware,
+  doctorOnlyMiddleware,
   asyncHandler((req: AuthenticatedRequest, res: Response) => doctorController.me(req, res))
 )
 
 router.put(
   '/',
-  authenticationMiddleware,
+  doctorOnlyMiddleware,
   asyncHandler((req: AuthenticatedRequest, res: Response) => doctorController.update(req, res))
 )
 

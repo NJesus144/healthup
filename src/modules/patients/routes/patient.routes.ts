@@ -1,32 +1,36 @@
-import { Response, Router } from 'express'
 import { PatientController } from '@/modules/patients/controllers/PatientController'
-import { asyncHandler, errorHandler } from '@/shared/errors/errorHandler'
 import { PatientServiceImp } from '@/modules/patients/services/PatientServiceImp'
-import { AuthenticationServiceImp } from '@/modules/authentication/services/AuthenticationServiceImp'
-import { AuthenticatedRequest, createAuthMiddleware } from '@/shared/middlewares/authenticationMiddleware'
+import { asyncHandler, errorHandler } from '@/shared/errors/errorHandler'
+import { Response, Router } from 'express'
 import { PatientRepositoryImp } from '@/modules/patients/repositories/PatientRepository'
-import { PatientAuthenticationStrategy } from '@/interfaces/auth/PatientAuthenticationStrategy'
+import { AuthenticatedRequest, createPatientOnlyMiddleware } from '@/shared/middlewares/authenticationMiddleware'
+import { AuthenticationServiceImp } from '@/modules/authentication/services/AuthenticationServiceImp'
+import { prisma } from '@/config/prisma'
+import { UserRepositoryImp } from '@/interfaces/repositories/UserRepository'
 
 const router = Router()
 
+const userRepository = new UserRepositoryImp(prisma)
 const patientRepository = new PatientRepositoryImp()
+
+const authenticationService = new AuthenticationServiceImp(userRepository)
 const patientService = new PatientServiceImp(patientRepository)
-const patientAuthStrategy = new PatientAuthenticationStrategy(patientService)
-const authenticationService = new AuthenticationServiceImp(patientAuthStrategy)
+
 const patientController = new PatientController(patientService)
-const authenticationMiddleware = createAuthMiddleware(authenticationService)
+
+const patientOnlyMiddleware = createPatientOnlyMiddleware(authenticationService)
 
 router.post('/', asyncHandler(patientController.create.bind(patientController)))
 
 router.get(
   '/me',
-  authenticationMiddleware,
+  patientOnlyMiddleware,
   asyncHandler((req: AuthenticatedRequest, res: Response) => patientController.me(req, res))
 )
 
 router.put(
   '/',
-  authenticationMiddleware,
+  patientOnlyMiddleware,
   asyncHandler((req: AuthenticatedRequest, res: Response) => patientController.update(req, res))
 )
 
