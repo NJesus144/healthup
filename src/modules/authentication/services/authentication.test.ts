@@ -1,17 +1,16 @@
 import { AuthenticationServiceImp } from './AuthenticationServiceImp'
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
-import { AuthenticationStrategy } from '@/interfaces/auth/AuthenticationStrategy'
-import { AuthType } from '@/interfaces/auth/AuthenticableEntity'
+import { UserRepository } from '@/interfaces/repositories/UserRepository'
+import { User, UserRole } from '@prisma/client'
 
 jest.mock('bcrypt')
 jest.mock('jsonwebtoken')
 
-const mockUserService = {
+const mockUserRepository = {
   findByEmail: jest.fn(),
   findById: jest.fn(),
-  getUserType: jest.fn(),
-} as jest.Mocked<AuthenticationStrategy>
+} as jest.Mocked<UserRepository>
 
 const mockBcrypt = bcrypt as jest.Mocked<typeof bcrypt>
 const mockJwt = jwt as jest.Mocked<typeof jwt>
@@ -19,18 +18,17 @@ const mockJwt = jwt as jest.Mocked<typeof jwt>
 describe('AuthenticationService', () => {
   let authService: AuthenticationServiceImp
 
-  const mockUser = {
+  const mockUser: User = {
     id: '1',
     name: 'João Silva',
     email: 'joao@gmail.com',
     phone: '11999999999',
     cpf: '52998224725',
-    passwordHash: 'hashedpassword123',
-  }
-
-  const mockPrismaUser = {
-    ...mockUser,
     passwordHash: '$2b$10$hashedpassword123',
+    role: UserRole.PATIENT,
+    status: 'ACTIVE',
+    crm: null,
+    specialty: null,
     createdAt: new Date(),
     updatedAt: new Date(),
   }
@@ -39,12 +37,13 @@ describe('AuthenticationService', () => {
     sub: '1',
     name: 'João Silva',
     email: 'joao@gmail.com',
+    role: UserRole.PATIENT,
     iat: 1234567890,
     exp: 1234567890 + 3600,
   }
 
   beforeEach(() => {
-    authService = new AuthenticationServiceImp(mockUserService)
+    authService = new AuthenticationServiceImp(mockUserRepository)
     jest.clearAllMocks()
 
     process.env.JWT_PRIVATE_KEY = 'private-key'
@@ -57,12 +56,32 @@ describe('AuthenticationService', () => {
     jest.restoreAllMocks()
   })
 
+  describe('findUserById', () => {
+    it('should return user when found', async () => {
+      mockUserRepository.findById.mockResolvedValue(mockUser)
+
+      const result = await authService.findUserById('1')
+
+      expect(result).toEqual(mockUser)
+      expect(mockUserRepository.findById).toHaveBeenCalledWith('1')
+    })
+
+    it('should return null when user is not found', async () => {
+      mockUserRepository.findById.mockResolvedValue(null)
+
+      const result = await authService.findUserById('nonexistent')
+
+      expect(result).toBeNull()
+      expect(mockUserRepository.findById).toHaveBeenCalledWith('nonexistent')
+    })
+  })
+
   describe('login', () => {
-    it('should return tokens when credentiasl are valid', async () => {
-      const email = 'jaoo@gmail.com'
+    it('should return tokens when credentials are valid', async () => {
+      const email = 'joao@gmail.com'
       const password = 'senha123'
 
-      mockUserService.findByEmail.mockResolvedValue(mockPrismaUser)
+      mockUserRepository.findByEmail.mockResolvedValue(mockUser)
       mockBcrypt.compareSync.mockReturnValue(true)
 
       const mockSign = mockJwt.sign as unknown as jest.Mock<string, any[]>
@@ -74,53 +93,44 @@ describe('AuthenticationService', () => {
         access_token: 'access-token',
         refresh_token: 'refresh-token',
       })
-      expect(mockUserService.findByEmail).toHaveBeenCalledWith(email)
-      expect(mockBcrypt.compareSync).toHaveBeenCalledWith(password, mockPrismaUser.passwordHash)
+      expect(mockUserRepository.findByEmail).toHaveBeenCalledWith(email)
+      expect(mockBcrypt.compareSync).toHaveBeenCalledWith(password, mockUser.passwordHash)
       expect(mockJwt.sign).toHaveBeenCalledTimes(2)
     })
-  })
 
-  it('should throw invalidCredentialsError when patient is not found', async () => {
-    const email = 'nonexistent@gmail.com'
-    const password = 'senha123'
+    it('should throw InvalidCredentialsError when user is not found', async () => {
+      const email = 'nonexistent@gmail.com'
+      const password = 'senha123'
 
-    mockUserService.findByEmail.mockResolvedValue(null)
+      mockUserRepository.findByEmail.mockResolvedValue(null)
 
-    await expect(authService.login(email, password)).rejects.toThrow('Invalid credentials')
-    expect(mockUserService.findByEmail).toHaveBeenCalledWith(email)
-    expect(mockBcrypt.compareSync).not.toHaveBeenCalled()
-  })
+      await expect(authService.login(email, password)).rejects.toThrow('Invalid credentials')
+      expect(mockUserRepository.findByEmail).toHaveBeenCalledWith(email)
+      expect(mockBcrypt.compareSync).not.toHaveBeenCalled()
+    })
 
-  it('should throw InvalidCredentialsError when password is incorrect', async () => {
-    const email = 'joao@gmail.com'
-    const password = 'wrongpassword'
+    it('should throw InvalidCredentialsError when password is incorrect', async () => {
+      const email = 'joao@gmail.com'
+      const password = 'wrongpassword'
 
-    mockUserService.findByEmail.mockResolvedValue(mockPrismaUser)
-    mockBcrypt.compareSync.mockReturnValue(false)
+      mockUserRepository.findByEmail.mockResolvedValue(mockUser)
+      mockBcrypt.compareSync.mockReturnValue(false)
 
-    await expect(authService.login(email, password)).rejects.toThrow('Invalid credentials')
-    expect(mockUserService.findByEmail).toHaveBeenCalledWith(email)
-    expect(mockBcrypt.compareSync).toHaveBeenCalledWith(password, mockPrismaUser.passwordHash)
-  })
-
-  it('should throw InvalidCredentialsError when patient exists but has no passwordHash', async () => {
-    const email = 'joao@gmail.com'
-    const password = 'senha123'
-    const patientWithoutPassword = { ...mockPrismaUser, passwordHash: null }
-
-    mockUserService.findByEmail.mockResolvedValue(patientWithoutPassword as any)
-
-    await expect(authService.login(email, password)).rejects.toThrow('Invalid credentials')
+      await expect(authService.login(email, password)).rejects.toThrow('Invalid credentials')
+      expect(mockUserRepository.findByEmail).toHaveBeenCalledWith(email)
+      expect(mockBcrypt.compareSync).toHaveBeenCalledWith(password, mockUser.passwordHash)
+    })
   })
 
   describe('refreshToken', () => {
     const mockSign = mockJwt.sign as unknown as jest.Mock<string, any[]>
     const mockVerify = mockJwt.verify as unknown as jest.Mock
+
     it('should return new tokens when refresh token is valid', async () => {
       const refreshToken = 'valid-refresh-token'
 
       mockVerify.mockReturnValue(mockTokenPayload)
-      mockUserService.findById.mockResolvedValue(mockUser)
+      mockUserRepository.findById.mockResolvedValue(mockUser)
 
       mockSign.mockReturnValueOnce('new-access-token').mockReturnValueOnce('new-refresh-token')
 
@@ -131,7 +141,7 @@ describe('AuthenticationService', () => {
         refresh_token: 'new-refresh-token',
       })
       expect(mockJwt.verify).toHaveBeenCalledWith(refreshToken, process.env.JWT_PUBLIC_KEY, { algorithms: ['RS256'] })
-      expect(mockUserService.findById).toHaveBeenCalledWith(mockTokenPayload.sub)
+      expect(mockUserRepository.findById).toHaveBeenCalledWith(mockTokenPayload.sub)
       expect(mockJwt.sign).toHaveBeenCalledTimes(2)
     })
 
@@ -146,15 +156,15 @@ describe('AuthenticationService', () => {
       expect(mockJwt.verify).toHaveBeenCalledWith(invalidToken, process.env.JWT_PUBLIC_KEY, { algorithms: ['RS256'] })
     })
 
-    it('should throw InvalidRefreshTokenError when patient is not found', async () => {
+    it('should throw InvalidRefreshTokenError when user is not found', async () => {
       const refreshToken = 'valid-refresh-token'
 
       mockVerify.mockReturnValue(mockTokenPayload)
-      mockUserService.findById.mockResolvedValue(null)
+      mockUserRepository.findById.mockResolvedValue(null)
 
       await expect(authService.refreshToken(refreshToken)).rejects.toThrow('Invalid refresh token')
       expect(mockJwt.verify).toHaveBeenCalledWith(refreshToken, process.env.JWT_PUBLIC_KEY, { algorithms: ['RS256'] })
-      expect(mockUserService.findById).toHaveBeenCalledWith(mockTokenPayload.sub)
+      expect(mockUserRepository.findById).toHaveBeenCalledWith(mockTokenPayload.sub)
     })
 
     it('should throw InvalidRefreshTokenError when jwt.verify throws any error', async () => {
@@ -170,18 +180,19 @@ describe('AuthenticationService', () => {
 
   describe('generateAccessToken', () => {
     const mockSign = mockJwt.sign as unknown as jest.Mock<string, any[]>
+
     it('should generate access token with correct payload and options', () => {
       const expectedToken = 'generated-access-token'
       mockSign.mockReturnValue(expectedToken)
 
-      const result = authService.generateAccessToken(mockUser, AuthType.PATIENT)
+      const result = authService.generateAccessToken(mockUser)
 
       expect(result).toBe(expectedToken)
       expect(mockJwt.sign).toHaveBeenCalledWith(
         {
           name: mockUser.name,
           email: mockUser.email,
-          userType: AuthType.PATIENT,
+          role: mockUser.role,
         },
         process.env.JWT_PRIVATE_KEY,
         {
@@ -200,14 +211,14 @@ describe('AuthenticationService', () => {
       const expectedToken = 'generated-refresh-token'
       mockSign.mockReturnValue(expectedToken)
 
-      const result = authService.generateRefreshToken(mockUser, AuthType.DOCTOR)
+      const result = authService.generateRefreshToken(mockUser)
 
       expect(result).toBe(expectedToken)
       expect(mockJwt.sign).toHaveBeenCalledWith(
         {
           name: mockUser.name,
           email: mockUser.email,
-          userType: AuthType.DOCTOR,
+          role: mockUser.role,
         },
         process.env.JWT_PRIVATE_KEY,
         {
