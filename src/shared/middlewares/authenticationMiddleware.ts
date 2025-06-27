@@ -1,18 +1,20 @@
 import { Request, Response, NextFunction } from 'express'
-import { TokenNotProvidedError, TokenExpiredError } from '@/shared/errors/AppError'
+import { TokenNotProvidedError, TokenExpiredError, ForbiddenError, UnauthorizedError } from '@/shared/errors/AppError'
 import { AuthenticationService } from '@/interfaces/services/AuthenticationService'
+import { UserRole } from '@prisma/client'
 
 export interface AuthenticatedRequest extends Request {
   user?: {
     sub: string
     name: string
     email: string
+    role: UserRole
     iat: number
     exp: number
   }
 }
 
-export function createAuthMiddleware(authenticationService: AuthenticationService) {
+export function createAuthMiddleware(authenticationService: AuthenticationService, allowedRoles?: UserRole[]) {
   return async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
       const token = req.headers.authorization?.replace('Bearer ', '') || req.cookies?.accessToken
@@ -22,6 +24,21 @@ export function createAuthMiddleware(authenticationService: AuthenticationServic
       }
 
       const payload = (await authenticationService.verifyAccessToken(token)) as AuthenticatedRequest['user']
+
+      if (!payload) {
+        throw new TokenNotProvidedError('Invalid access token payload')
+      }
+
+      const user = await authenticationService.findUserById(payload.sub)
+
+      if (!user) {
+        throw new UnauthorizedError('User not found')
+      }
+
+      if (allowedRoles && !allowedRoles.includes(user.role)) {
+        throw new ForbiddenError('Insufficient permissions')
+      }
+
       req.user = payload
 
       next()
@@ -33,4 +50,12 @@ export function createAuthMiddleware(authenticationService: AuthenticationServic
       }
     }
   }
+}
+
+export function createDoctorOnlyMiddleware(authService: AuthenticationService) {
+  return createAuthMiddleware(authService, [UserRole.DOCTOR])
+}
+
+export function createPatientOnlyMiddleware(authService: AuthenticationService) {
+  return createAuthMiddleware(authService, [UserRole.PATIENT])
 }
