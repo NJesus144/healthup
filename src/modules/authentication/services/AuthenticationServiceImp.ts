@@ -1,22 +1,26 @@
 import { AuthenticationService } from '@/interfaces/services/AuthenticationService'
 import { InvalidCredentialsError, InvalidRefreshTokenError, NotFoundError } from '@/shared/errors/AppError'
-import { AuthenticationStrategy } from '@/interfaces/auth/AuthenticationStrategy'
-import { AuthenticatableEntity, AuthType } from '@/interfaces/auth/AuthenticableEntity'
 import jwt from 'jsonwebtoken'
 import bcrypt from 'bcrypt'
+import { User, UserRole } from '@prisma/client'
+import { UserRepository } from '@/interfaces/repositories/UserRepository'
 
 export class AuthenticationServiceImp implements AuthenticationService {
-  constructor(private readonly authStrategy: AuthenticationStrategy) {}
+  constructor(private readonly userRepository: UserRepository) {}
+
+  async findUserById(userId: string): Promise<User | null> {
+    return this.userRepository.findById(userId)
+  }
 
   async login(email: string, password: string): Promise<{ access_token: string; refresh_token: string }> {
-    const user = await this.authStrategy.findByEmail(email)
+    const user = await this.userRepository.findByEmail(email)
 
     if (!user || !bcrypt.compareSync(password, user.passwordHash)) {
       throw new InvalidCredentialsError()
     }
 
-    const accessToken = this.generateAccessToken(user, this.authStrategy.getUserType())
-    const refreshToken = this.generateRefreshToken(user, this.authStrategy.getUserType())
+    const accessToken = this.generateAccessToken(user)
+    const refreshToken = this.generateRefreshToken(user)
 
     return { access_token: accessToken, refresh_token: refreshToken }
   }
@@ -24,14 +28,14 @@ export class AuthenticationServiceImp implements AuthenticationService {
   async refreshToken(refreshToken: string): Promise<{ access_token: string; refresh_token: string }> {
     try {
       const payload = this.verifyRefreshToken(refreshToken)
-      const user = await this.authStrategy.findById(payload.sub)
+      const user = await this.userRepository.findById(payload.sub)
 
       if (!user) {
         throw new NotFoundError('User not found')
       }
 
-      const newAccessToken = this.generateAccessToken(user, this.authStrategy.getUserType())
-      const newRefreshToken = this.generateRefreshToken(user, this.authStrategy.getUserType())
+      const newAccessToken = this.generateAccessToken(user)
+      const newRefreshToken = this.generateRefreshToken(user)
 
       return {
         access_token: newAccessToken,
@@ -42,12 +46,12 @@ export class AuthenticationServiceImp implements AuthenticationService {
     }
   }
 
-  generateAccessToken(user: AuthenticatableEntity, userType: AuthType): string {
+  generateAccessToken(user: User): string {
     return jwt.sign(
       {
         name: user.name,
         email: user.email,
-        userType,
+        role: user.role,
       },
       process.env.JWT_PRIVATE_KEY as string,
       {
@@ -58,12 +62,12 @@ export class AuthenticationServiceImp implements AuthenticationService {
     )
   }
 
-  generateRefreshToken(user: AuthenticatableEntity, userType: AuthType): string {
+  generateRefreshToken(user: User): string {
     return jwt.sign(
       {
         name: user.name,
         email: user.email,
-        userType,
+        role: user.role,
       },
       process.env.JWT_PRIVATE_KEY as string,
       {
@@ -78,6 +82,7 @@ export class AuthenticationServiceImp implements AuthenticationService {
     sub: string
     name: string
     email: string
+    role: UserRole
     iat: number
     exp: number
   } {
@@ -87,6 +92,7 @@ export class AuthenticationServiceImp implements AuthenticationService {
       sub: string
       name: string
       email: string
+      role: UserRole
       iat: number
       exp: number
     }
@@ -96,6 +102,7 @@ export class AuthenticationServiceImp implements AuthenticationService {
     sub: string
     name: string
     email: string
+    role: UserRole
     iat: number
     exp: number
   } {
@@ -105,6 +112,7 @@ export class AuthenticationServiceImp implements AuthenticationService {
       sub: string
       name: string
       email: string
+      role: UserRole
       iat: number
       exp: number
     }
