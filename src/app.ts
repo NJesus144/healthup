@@ -5,6 +5,7 @@ import dotenv from 'dotenv'
 import { PrismaClient } from '@prisma/client'
 import patientRoutes from '../src/modules/patients/routes/patient.routes'
 import doctorRoutes from '../src/modules/doctors/routes/doctor.routes'
+import appointmentRoutes from '../src/modules/appointments/routes/appointment.routes'
 import { errorHandler } from '@/shared/errors/errorHandler'
 import authRoutes from '@/modules/authentication/routes/auth.routes'
 
@@ -36,6 +37,7 @@ app.use('/auth', authRoutes)
 
 app.use('/patients', patientRoutes)
 app.use('/doctors', doctorRoutes)
+app.use('/appointments', appointmentRoutes)
 
 app.use(errorHandler)
 
