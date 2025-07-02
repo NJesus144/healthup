@@ -41,7 +41,7 @@ model User {
 model BlockedDate {
   id       String   @id @default(cuid())
   doctorId String   @map("doctor_id")
-  date     DateTime @db.Date
+  date     DateTime 
   reason   String?  @db.VarChar(255)
 
   createdAt DateTime @default(now()) @map("created_at")
@@ -57,7 +57,7 @@ model Appointment {
   id        String            @id @default(cuid())
   patientId String            @map("patient_id")
   doctorId  String            @map("doctor_id")
-  date      DateTime          @db.Date
+  date      DateTime         
   time      String            @db.VarChar(5)
   notes     String?
   status    AppointmentStatus @default(SCHEDULED)
