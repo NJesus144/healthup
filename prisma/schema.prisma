@@ -32,32 +32,16 @@ model User {
 
   patientAppointments Appointment[]        @relation("PatientAppointments")
   doctorAppointments  Appointment[]        @relation("DoctorAppointments")
-  availability        DoctorAvailability[]
   blockedDates        BlockedDate[]
   notifications       Notification[]
 
   @@map("users")
 }
 
-model DoctorAvailability {
-  id       String @id @default(cuid())
-  doctorId String @map("doctor_id")
-  weekday  Int
-  time     String @db.VarChar(5) // formato HH:MM
-
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  doctor User @relation(fields: [doctorId], references: [id], onDelete: Cascade)
-
-  @@unique([doctorId, weekday, time])
-  @@map("doctor_availability")
-}
-
 model BlockedDate {
   id       String   @id @default(cuid())
   doctorId String   @map("doctor_id")
-  date     DateTime @db.Date
+  date     DateTime 
   reason   String?  @db.VarChar(255)
 
   createdAt DateTime @default(now()) @map("created_at")
@@ -68,11 +52,12 @@ model BlockedDate {
   @@map("blocked_dates")
 }
 
+
 model Appointment {
   id        String            @id @default(cuid())
   patientId String            @map("patient_id")
   doctorId  String            @map("doctor_id")
-  date      DateTime          @db.Date
+  date      DateTime         
   time      String            @db.VarChar(5)
   notes     String?
   status    AppointmentStatus @default(SCHEDULED)
