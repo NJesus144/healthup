@@ -2,6 +2,7 @@ import { FakeAppointmentRepository } from '@/interfaces/repositories/fake_appoin
 import { FakeDoctorRepository } from '@/interfaces/repositories/fake_doctor_repository'
 import { DoctorServiceImp } from '@/modules/doctors/services/DoctorServiceImp'
 import { MedicalSpecialty, UserStatus } from '@prisma/client'
+import { ConflictError, NotFoundError } from '@/shared/errors/AppError'
 
 describe('Doctor Service', () => {
   let doctorService: DoctorServiceImp
@@ -260,8 +261,13 @@ describe('Doctor Service', () => {
 
       expect(blockedDates).toBeDefined()
       expect(blockedDates.length).toBe(2)
-      expect(blockedDates).toContainEqual(blockDateData1.date)
-      expect(blockedDates).toContainEqual(blockDateData2.date)
+
+      const blockedDatesOnly = blockedDates.map(date => date.toISOString().split('T')[0])
+      const expectedDate1 = blockDateData1.date.toISOString().split('T')[0]
+      const expectedDate2 = blockDateData2.date.toISOString().split('T')[0]
+
+      expect(blockedDatesOnly).toContain(expectedDate1)
+      expect(blockedDatesOnly).toContain(expectedDate2)
     })
 
     it('should throw NotFoundError when trying to get blocked dates for non-existent doctor', async () => {

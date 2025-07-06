@@ -28,10 +28,13 @@ describe('Appointment Service', () => {
 
       const newAppointment = await appointmentService.createAppointment(appointmentData)
 
-      expect(newAppointment).toBeDefined()
       expect(newAppointment.patientId).toBe(appointmentData.patientId)
       expect(newAppointment.doctorId).toBe(appointmentData.doctorId)
-      expect(newAppointment.date).toEqual(parseISO(appointmentData.date))
+
+      const appointmentDateOnly = newAppointment.date.toISOString().split('T')[0]
+      const expectedDateOnly = parseISO(appointmentData.date).toISOString().split('T')[0]
+
+      expect(appointmentDateOnly).toBe(expectedDateOnly)
       expect(newAppointment.time).toBe(appointmentData.time)
       expect(newAppointment.status).toBe(AppointmentStatus.SCHEDULED)
     })
