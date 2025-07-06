@@ -260,9 +260,8 @@ describe('Doctor Service', () => {
 
       expect(blockedDates).toBeDefined()
       expect(blockedDates.length).toBe(2)
-      const blockedDatesISO = blockedDates.map(date => date.toISOString())
-      expect(blockedDatesISO).toContain(blockDateData1.date.toISOString())
-      expect(blockedDatesISO).toContain(blockDateData2.date.toISOString())
+      expect(blockedDates).toContainEqual(blockDateData1.date)
+      expect(blockedDates).toContainEqual(blockDateData2.date)
     })
 
     it('should throw NotFoundError when trying to get blocked dates for non-existent doctor', async () => {
