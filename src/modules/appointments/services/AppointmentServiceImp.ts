@@ -7,9 +7,13 @@ import { ConflictError, NotFoundError } from '@/shared/errors/AppError'
 import { UpdateAppointmentDTO } from '@/modules/appointments/dtos/UpdateAppointmentDTO'
 import { UserRole } from '@prisma/client'
 import { fromZonedTime } from 'date-fns-tz'
+import { DoctorRepository } from '@/interfaces/repositories/DoctorRepository'
 
 export class AppointmentServiceImp implements AppointmentService {
-  constructor(private readonly appointmentRepository: AppointmentRepository) {}
+  constructor(
+    private readonly appointmentRepository: AppointmentRepository,
+    private readonly doctorRepository: DoctorRepository
+  ) {}
 
   async createAppointment(data: CreateAppointmentDTO): Promise<Appointment> {
     const isAvailable = await this.appointmentRepository.checkSlotAvailability(data.doctorId, data.date, data.time)
@@ -22,7 +26,7 @@ export class AppointmentServiceImp implements AppointmentService {
     const start = startOfDay(appointmentDate)
     const end = endOfDay(appointmentDate)
 
-    const blockedDates = await this.appointmentRepository.getBlockedDates(data.doctorId, start, end)
+    const blockedDates = await this.doctorRepository.getBlockedDates(data.doctorId, start, end)
 
     if (blockedDates.some(blocked => isSameDay(blocked, appointmentDate))) {
       throw new ConflictError('This date is blocked for the doctor')

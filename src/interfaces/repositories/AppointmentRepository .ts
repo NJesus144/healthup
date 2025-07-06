@@ -11,6 +11,5 @@ export interface AppointmentRepository {
   getAppointmentsByUser(userId: string, userRole: UserRole): Promise<AppointmentWithDetails[]>
   getOccupiedSlots(doctorId: string, startDate: Date, endDate: Date): Promise<{ date: Date; time: string }[]>
   checkSlotAvailability(doctorId: string, date: string, time: string): Promise<boolean>
-  getBlockedDates(doctorId: string, startDate: Date, endDate: Date): Promise<Date[]>
   // getDoctorsBySpecialty(specialty?: string): Promise<User[]>
 }

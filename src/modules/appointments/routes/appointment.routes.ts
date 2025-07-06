@@ -7,14 +7,16 @@ import { AuthenticatedRequest, createAuthMiddleware } from '@/shared/middlewares
 import { AuthenticationServiceImp } from '@/modules/authentication/services/AuthenticationServiceImp'
 import { UserRepositoryImp } from '@/interfaces/repositories/UserRepository'
 import { prisma } from '@/config/prisma'
+import { DoctorRepositoryImp } from '@/modules/doctors/repositories/DoctorRepositoryImp'
 
 const router = Router()
 
 const userRepository = new UserRepositoryImp(prisma)
 const appointmentRepository = new AppointmentRepositoryImp()
+const doctorRepository = new DoctorRepositoryImp()
 
 const authenticationService = new AuthenticationServiceImp(userRepository)
-const appointmentService = new AppointmentServiceImp(appointmentRepository)
+const appointmentService = new AppointmentServiceImp(appointmentRepository, doctorRepository)
 
 const appointmentController = new AppointmentController(appointmentService)
 
