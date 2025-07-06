@@ -7,6 +7,7 @@
     "test": "jest",
     "dev": "nodemon --watch src --exec ts-node -r tsconfig-paths/register src/app.ts",
     "build": "tsc --project tsconfig.json && tsc-alias -p tsconfig.json",
+    "build:prod": "tsc --project tsconfig.prod.json && tsc-alias -p tsconfig.prod.json",
     "start": "node dist/app.js",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
