@@ -2,6 +2,7 @@ import { CreateAppointmentDTO } from '@/modules/appointments/dtos/CreateAppointm
 import { AppError } from '@/shared/errors/AppError'
 import { z } from 'zod'
 import { isValid, parseISO, isAfter, startOfDay } from 'date-fns'
+import { fromZonedTime } from 'date-fns-tz'
 
 const createAppointmentSchema = z.object({
   patientId: z.string().cuid('Patient ID must be a valid'),
@@ -19,7 +20,8 @@ export function validateCreateAppointment(data: CreateAppointmentDTO): CreateApp
     throw new AppError(errorMessage, 400)
   }
 
-  const appointmentDate = parseISO(data.date)
+  const appointmentDate = fromZonedTime(`${data.date}T${data.time}`, 'America/Sao_Paulo')
+
   if (!isValid(appointmentDate)) {
     throw new AppError('Invalid date format', 400)
   }

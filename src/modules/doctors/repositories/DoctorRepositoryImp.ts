@@ -1,9 +1,10 @@
 import { prisma } from '@/config/prisma'
 import { DoctorRepository } from '@/interfaces/repositories/DoctorRepository'
+import { CreateBloquedDateDTO } from '@/modules/doctors/dtos/CreateBloquedDateDTO'
 import { CreateDoctorDTO } from '@/modules/doctors/dtos/CreateDoctorDTO'
 import { UpdateDoctorDTO } from '@/modules/doctors/dtos/UpdateDoctorDTO'
 import { Doctor } from '@/modules/doctors/models/Doctor'
-import { MedicalSpecialty, UserRole, UserStatus } from '@prisma/client'
+import { BlockedDate, MedicalSpecialty, UserRole, UserStatus } from '@prisma/client'
 
 export interface PrismaDoctor {
   id: string
@@ -100,5 +101,60 @@ export class DoctorRepositoryImp implements DoctorRepository {
       updatedAt: doctor.updatedAt,
       createdAt: doctor.createdAt,
     }
+  }
+
+  async getBlockedDates(doctorId: string, startDate: Date, endDate: Date): Promise<Date[]> {
+    const blockedDates = await prisma.blockedDate.findMany({
+      where: {
+        doctorId,
+        date: {
+          gte: startDate,
+          lte: endDate,
+        },
+      },
+      select: {
+        date: true,
+      },
+    })
+
+    return blockedDates.map(blocked => blocked.date)
+  }
+
+  async cancelBlockedDate(doctorId: string, date: Date): Promise<BlockedDate> {
+    const blockedDate = await prisma.blockedDate.delete({
+      where: {
+        doctorId_date: {
+          doctorId,
+          date,
+        },
+      },
+    })
+
+    return blockedDate
+  }
+
+  async blockedDate(doctorId: string, createBloquedDateDTO: CreateBloquedDateDTO): Promise<BlockedDate> {
+    const blockedDate = await prisma.blockedDate.create({
+      data: {
+        doctorId,
+        date: createBloquedDateDTO.date,
+        reason: createBloquedDateDTO.reason || null,
+      },
+    })
+
+    return blockedDate
+  }
+
+  async getAllBlockedDates(doctorId: string): Promise<Date[]> {
+    const blockedDates = await prisma.blockedDate.findMany({
+      where: {
+        doctorId,
+      },
+      select: {
+        date: true,
+      },
+    })
+
+    return blockedDates.map(blocked => blocked.date)
   }
 }

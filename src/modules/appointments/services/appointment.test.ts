@@ -2,14 +2,18 @@ import { FakeAppointmentRepository } from '@/interfaces/repositories/fake_appoin
 import { AppointmentServiceImp } from './AppointmentServiceImp'
 import { AppointmentStatus, UserRole } from '@prisma/client'
 import { parseISO } from 'date-fns'
+import { FakeDoctorRepository } from '@/interfaces/repositories/fake_doctor_repository'
+import { fromZonedTime } from 'date-fns-tz'
 
 describe('Appointment Service', () => {
   let appointmentService: AppointmentServiceImp
   let fakeAppointmentRepository: FakeAppointmentRepository
+  let fakeDoctorRepository: FakeDoctorRepository
 
   beforeEach(() => {
     fakeAppointmentRepository = new FakeAppointmentRepository()
-    appointmentService = new AppointmentServiceImp(fakeAppointmentRepository)
+    fakeDoctorRepository = new FakeDoctorRepository()
+    appointmentService = new AppointmentServiceImp(fakeAppointmentRepository, fakeDoctorRepository)
   })
 
   describe('createAppointment', () => {
@@ -24,10 +28,13 @@ describe('Appointment Service', () => {
 
       const newAppointment = await appointmentService.createAppointment(appointmentData)
 
-      expect(newAppointment).toBeDefined()
       expect(newAppointment.patientId).toBe(appointmentData.patientId)
       expect(newAppointment.doctorId).toBe(appointmentData.doctorId)
-      expect(newAppointment.date).toEqual(parseISO(appointmentData.date))
+
+      const appointmentDateOnly = newAppointment.date.toISOString().split('T')[0]
+      const expectedDateOnly = parseISO(appointmentData.date).toISOString().split('T')[0]
+
+      expect(appointmentDateOnly).toBe(expectedDateOnly)
       expect(newAppointment.time).toBe(appointmentData.time)
       expect(newAppointment.status).toBe(AppointmentStatus.SCHEDULED)
     })
@@ -52,6 +59,8 @@ describe('Appointment Service', () => {
         time: '14:00',
         notes: 'Consulta',
       }
+      const dateIso = fromZonedTime('2024-12-25', 'America/Sao_Paulo')
+      await fakeDoctorRepository.blockedDate('doctor-1', { date: dateIso, reason: 'Feriado de Natal' })
 
       await expect(appointmentService.createAppointment(appointmentData)).rejects.toThrow('This date is blocked for the doctor')
     })

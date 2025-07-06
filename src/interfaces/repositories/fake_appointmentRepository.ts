@@ -4,6 +4,7 @@ import { UpdateAppointmentDTO } from '@/modules/appointments/dtos/UpdateAppointm
 import { Appointment, AppointmentWithDetails } from '@/modules/appointments/models/Appointment'
 import { UserRole, AppointmentStatus, MedicalSpecialty } from '@prisma/client'
 import { isSameDay, parseISO } from 'date-fns'
+import { fromZonedTime } from 'date-fns-tz'
 
 export class FakeAppointmentRepository implements AppointmentRepository {
   private appointments: AppointmentWithDetails[] = [
@@ -62,7 +63,7 @@ export class FakeAppointmentRepository implements AppointmentRepository {
       id: String(this.appointments.length + 1),
       patientId: data.patientId,
       doctorId: data.doctorId,
-      date: parseISO(data.date),
+      date: fromZonedTime(data.date, 'America/Sao_Paulo'),
       time: data.time,
       status: AppointmentStatus.SCHEDULED,
       notes: data.notes,

@@ -5,6 +5,7 @@ import { AuthenticatedRequest } from '@/shared/middlewares/authenticationMiddlew
 import { validateCreateDoctor } from '@/modules/doctors/validators/validateCreateDoctor'
 import { validateUpdateDoctor } from '@/modules/doctors/validators/validateUpdateDoctor'
 import { validateGetDoctorsQuery } from '@/modules/doctors/validators/validateQueryParameters'
+import { validateGetDoctorAvailability } from '@/modules/doctors/validators/validateGetDoctorAvailability'
 
 export class DoctorController {
   constructor(private readonly doctorService: DoctorService) {}
@@ -39,5 +40,38 @@ export class DoctorController {
     const doctors = await this.doctorService.findAllAvailableDoctors(queryDto)
 
     return responseSuccess(res, doctors, 'Doctors retrieved successfully')
+  }
+
+  async blockedDate(req: AuthenticatedRequest, res: Response): Promise<Response> {
+    const doctorId = req.user!.sub
+
+    const blockedDate = await this.doctorService.blockedDate(doctorId, req.body)
+
+    return responseSuccess(res, blockedDate, 'Blocked date retrieved successfully')
+  }
+
+  async cancelBlockedDate(req: AuthenticatedRequest, res: Response): Promise<Response> {
+    const doctorId = req.user!.sub
+    const { date } = req.body
+
+    const canceledDate = await this.doctorService.cancelBlockedDate(doctorId, date)
+
+    return responseSuccess(res, canceledDate, 'Blocked date canceled successfully')
+  }
+
+  async getBlockedDates(req: AuthenticatedRequest, res: Response): Promise<Response> {
+    const doctorId = req.user!.sub
+
+    const blockedDates = await this.doctorService.getBlockedDates(doctorId)
+
+    return responseSuccess(res, blockedDates, 'Blocked dates retrieved successfully')
+  }
+
+  async getAvailability(req: Request, res: Response): Promise<Response> {
+    const { doctorId } = validateGetDoctorAvailability({ doctorId: req.params.doctorId })
+
+    const availability = await this.doctorService.getDoctorAvailability(doctorId)
+
+    return responseSuccess(res, availability, 'Doctor availability retrieved successfully')
   }
 }

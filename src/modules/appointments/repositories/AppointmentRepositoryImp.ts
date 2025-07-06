@@ -3,7 +3,7 @@ import { AppointmentRepository } from '@/interfaces/repositories/AppointmentRepo
 import { CreateAppointmentDTO } from '@/modules/appointments/dtos/CreateAppointmentDTO'
 import { UpdateAppointmentDTO } from '@/modules/appointments/dtos/UpdateAppointmentDTO'
 import { Appointment, AppointmentWithDetails } from '@/modules/appointments/models/Appointment'
-import { AppointmentStatus, MedicalSpecialty, User, UserRole, UserStatus } from '@prisma/client'
+import { AppointmentStatus, UserRole } from '@prisma/client'
 import { parseISO } from 'date-fns'
 import { fromZonedTime } from 'date-fns-tz'
 
@@ -142,23 +142,6 @@ export class AppointmentRepositoryImp implements AppointmentRepository {
     console.log('Slot availability check:', { doctorId, date, time, appointment })
 
     return !appointment
-  }
-
-  async getBlockedDates(doctorId: string, startDate: Date, endDate: Date): Promise<Date[]> {
-    const blockedDates = await prisma.blockedDate.findMany({
-      where: {
-        doctorId,
-        date: {
-          gte: startDate,
-          lte: endDate,
-        },
-      },
-      select: {
-        date: true,
-      },
-    })
-
-    return blockedDates.map(blocked => blocked.date)
   }
 
   // async getDoctorsBySpecialty(specialty?: string): Promise<User[]> {

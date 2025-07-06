@@ -7,14 +7,16 @@ import { AuthenticatedRequest, createDoctorOnlyMiddleware } from '@/shared/middl
 import { AuthenticationServiceImp } from '@/modules/authentication/services/AuthenticationServiceImp'
 import { prisma } from '@/config/prisma'
 import { UserRepositoryImp } from '@/interfaces/repositories/UserRepository'
+import { AppointmentRepositoryImp } from '@/modules/appointments/repositories/AppointmentRepositoryImp'
 
 const router = Router()
 
 const userRepository = new UserRepositoryImp(prisma)
 const doctorRepository = new DoctorRepositoryImp()
+const appointmentRepository = new AppointmentRepositoryImp()
 
 const authenticationService = new AuthenticationServiceImp(userRepository)
-const doctorService = new DoctorServiceImp(doctorRepository)
+const doctorService = new DoctorServiceImp(doctorRepository, appointmentRepository)
 
 const doctorController = new DoctorController(doctorService)
 
@@ -34,6 +36,26 @@ router.put(
   doctorOnlyMiddleware,
   asyncHandler((req: AuthenticatedRequest, res: Response) => doctorController.update(req, res))
 )
+
+router.post(
+  '/blocked-date',
+  doctorOnlyMiddleware,
+  asyncHandler((req: AuthenticatedRequest, res: Response) => doctorController.blockedDate(req, res))
+)
+
+router.delete(
+  '/blocked-date',
+  doctorOnlyMiddleware,
+  asyncHandler((req: AuthenticatedRequest, res: Response) => doctorController.cancelBlockedDate(req, res))
+)
+
+router.get(
+  '/blocked-date',
+  doctorOnlyMiddleware,
+  asyncHandler((req: AuthenticatedRequest, res: Response) => doctorController.getBlockedDates(req, res))
+)
+
+router.get('/:doctorId/availability', asyncHandler(doctorController.getAvailability.bind(doctorController)))
 
 router.use(errorHandler)
 

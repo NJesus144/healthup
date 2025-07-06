@@ -4,7 +4,7 @@ import { UpdateDoctorDTO } from '@/modules/doctors/dtos/UpdateDoctorDTO'
 import { Doctor } from '@/modules/doctors/models/Doctor'
 import { PrismaDoctor } from '@/modules/doctors/repositories/DoctorRepositoryImp'
 import { NotFoundError } from '@/shared/errors/AppError'
-import { MedicalSpecialty, UserStatus } from '@prisma/client'
+import { BlockedDate, MedicalSpecialty, UserStatus } from '@prisma/client'
 
 export class FakeDoctorRepository implements DoctorRepository {
   private doctors: PrismaDoctor[] = [
@@ -22,6 +22,8 @@ export class FakeDoctorRepository implements DoctorRepository {
       updatedAt: new Date(),
     },
   ]
+
+  private blockedDates: BlockedDate[] = []
 
   async createDoctor(data: CreateDoctorDTO): Promise<Doctor> {
     const newDoctor = {
@@ -67,5 +69,46 @@ export class FakeDoctorRepository implements DoctorRepository {
       ...doctor,
       status: doctor.status ?? UserStatus.PENDING,
     } as PrismaDoctor
+  }
+
+  async blockedDate(doctorId: string, data: { date: Date; reason?: string }): Promise<BlockedDate> {
+    const newBlockedDate: BlockedDate = {
+      id: String(this.blockedDates.length + 1),
+      doctorId,
+      date: data.date,
+      reason: data.reason || null,
+      createdAt: new Date(),
+    }
+
+    this.blockedDates.push(newBlockedDate)
+    return newBlockedDate
+  }
+
+  async getBlockedDates(doctorId: string, startDate: Date, endDate: Date): Promise<Date[]> {
+    return this.blockedDates
+      .filter(blocked => {
+        const blockedDateOnly = new Date(blocked.date.toISOString().split('T')[0])
+        const startDateOnly = new Date(startDate.toISOString().split('T')[0])
+        const endDateOnly = new Date(endDate.toISOString().split('T')[0])
+
+        return blocked.doctorId === doctorId && blockedDateOnly >= startDateOnly && blockedDateOnly <= endDateOnly
+      })
+      .map(blocked => blocked.date)
+  }
+
+  async cancelBlockedDate(doctorId: string, date: Date): Promise<BlockedDate> {
+    const dateString = date.toISOString().split('T')[0]
+    const blockedDateIndex = this.blockedDates.findIndex(blocked => blocked.doctorId === doctorId && blocked.date.toISOString().split('T')[0] === dateString)
+
+    if (blockedDateIndex === -1) {
+      throw new NotFoundError('Blocked date not found')
+    }
+
+    const [canceledDate] = this.blockedDates.splice(blockedDateIndex, 1)
+    return canceledDate
+  }
+
+  async getAllBlockedDates(doctorId: string): Promise<Date[]> {
+    return this.blockedDates.filter(blocked => blocked.doctorId === doctorId).map(blocked => blocked.date)
   }
 }
