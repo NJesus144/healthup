@@ -8,6 +8,8 @@ export interface Appointment {
   time: string
   notes?: string
   status: AppointmentStatus
+  patientName?: string
+  patientEmail?: string
   createdAt: Date
   updatedAt: Date
 }

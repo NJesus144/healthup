@@ -34,10 +34,12 @@ export class AppointmentController {
     return responseSuccess(res, appointment, 'Appointment updated successfully')
   }
 
-  async delete(req: Request, res: Response): Promise<Response> {
+  async delete(req: AuthenticatedRequest, res: Response): Promise<Response> {
     const { id } = req.params
+    const userId = req.user!.sub
+    const role = req.user!.role
 
-    await this.appointmentService.deleteAppointment(id)
+    await this.appointmentService.deleteAppointment(id, userId, role)
 
     return responseSuccess(res, null, 'Appointment deleted successfully')
   }
