@@ -42,7 +42,11 @@ router.put(
   asyncHandler((req: AuthenticatedRequest, res: Response) => appointmentController.update(req, res))
 )
 
-router.delete('/:id', asyncHandler(appointmentController.delete.bind(appointmentController)))
+router.delete(
+  '/:id',
+  authMiddleware,
+  asyncHandler((req: AuthenticatedRequest, res: Response) => appointmentController.delete(req, res))
+)
 
 router.use(errorHandler)
 export default router
