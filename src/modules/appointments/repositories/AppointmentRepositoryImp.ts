@@ -15,6 +15,14 @@ export class AppointmentRepositoryImp implements AppointmentRepository {
         ...data,
         date: fromZonedTime(combined, 'America/Sao_Paulo'),
       },
+      include: {
+        patient: {
+          select: {
+            name: true,
+            email: true,
+          },
+        },
+      },
     })
 
     return this.convertAppointmentData(appointment)
@@ -65,10 +73,20 @@ export class AppointmentRepositoryImp implements AppointmentRepository {
     return this.convertAppointmentData(appointment)
   }
 
-  async deleteAppointment(id: string): Promise<void> {
-    await prisma.appointment.delete({
+  async deleteAppointment(id: string): Promise<Appointment> {
+    const appointment = await prisma.appointment.delete({
       where: { id },
+      include: {
+        patient: {
+          select: {
+            name: true,
+            email: true,
+          },
+        },
+      },
     })
+
+    return this.convertAppointmentData(appointment)
   }
 
   async getAppointmentsByUser(userId: string, userRole: UserRole): Promise<AppointmentWithDetails[]> {
@@ -130,16 +148,16 @@ export class AppointmentRepositoryImp implements AppointmentRepository {
   }
 
   async checkSlotAvailability(doctorId: string, date: string, time: string): Promise<boolean> {
+    const combined = `${date}T${time}`
     const appointment = await prisma.appointment.findUnique({
       where: {
         doctorId_date_time: {
           doctorId,
-          date: parseISO(date),
+          date: fromZonedTime(combined, 'America/Sao_Paulo'),
           time,
         },
       },
     })
-    console.log('Slot availability check:', { doctorId, date, time, appointment })
 
     return !appointment
   }
@@ -161,8 +179,10 @@ export class AppointmentRepositoryImp implements AppointmentRepository {
       doctorId: appointment.doctorId,
       date: appointment.date,
       time: appointment.time,
-      notes: appointment.notes,
+      notes: appointment.notes || '',
       status: appointment.status,
+      patientName: appointment.patient?.name || '',
+      patientEmail: appointment.patient?.email || '',
       createdAt: appointment.createdAt,
       updatedAt: appointment.updatedAt,
     }

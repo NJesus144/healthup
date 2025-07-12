@@ -8,12 +8,14 @@ import doctorRoutes from '@/modules/doctors/routes/doctor.routes'
 import appointmentRoutes from '@/modules/appointments/routes/appointment.routes'
 import { errorHandler } from '@/shared/errors/errorHandler'
 import authRoutes from '@/modules/authentication/routes/auth.routes'
+import NotificationWorker from '@/workers/notificationWorker'
 
 dotenv.config()
 
 const app = express()
 const PORT = process.env.PORT || 3000
 const prisma = new PrismaClient()
+const notificationWorker = new NotificationWorker()
 
 app.use(helmet())
 app.use(cors())
@@ -38,6 +40,11 @@ app.use('/auth', authRoutes)
 app.use('/patients', patientRoutes)
 app.use('/doctors', doctorRoutes)
 app.use('/appointments', appointmentRoutes)
+
+process.on('SIGTERM', async () => {
+  await notificationWorker.close()
+  process.exit(0)
+})
 
 app.use(errorHandler)
 

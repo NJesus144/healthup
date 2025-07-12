@@ -4,6 +4,7 @@ import { AppointmentStatus, UserRole } from '@prisma/client'
 import { parseISO } from 'date-fns'
 import { FakeDoctorRepository } from '@/interfaces/repositories/fake_doctor_repository'
 import { fromZonedTime } from 'date-fns-tz'
+import emailQueue from '@/modules/notifications/jobs/emailQueue'
 
 describe('Appointment Service', () => {
   let appointmentService: AppointmentServiceImp
@@ -140,12 +141,12 @@ describe('Appointment Service', () => {
 
   describe('deleteAppointment', () => {
     it('should delete an existing appointment', async () => {
-      await appointmentService.deleteAppointment('1')
+      await appointmentService.deleteAppointment('1', 'patient-1', UserRole.PATIENT)
       await expect(appointmentService.getAppointmentById('1')).rejects.toThrow('Appointment not found')
     })
 
     it('should throw NotFoundError when trying to delete non-existent appointment', async () => {
-      await expect(appointmentService.deleteAppointment('non-existing-id')).rejects.toThrow('Appointment not found')
+      await expect(appointmentService.deleteAppointment('non-existing-id', 'patient-1', UserRole.PATIENT)).rejects.toThrow('Appointment not found')
     })
   })
 
