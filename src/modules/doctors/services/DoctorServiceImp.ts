@@ -9,6 +9,7 @@ import { UpdateDoctorDTO } from '@/modules/doctors/dtos/UpdateDoctorDTO'
 import { Doctor } from '@/modules/doctors/models/Doctor'
 import { PrismaDoctor } from '@/modules/doctors/repositories/DoctorRepositoryImp'
 import { GetDoctorsQueryDTO } from '@/modules/doctors/validators/validateQueryParameters'
+import notificationService from '@/modules/notifications/services/notificationService'
 import { BadRequestError, ConflictError, NotFoundError } from '@/shared/errors/AppError'
 import { DocumentValidator } from '@/shared/utils/documentValidator'
 import { BlockedDate, MedicalSpecialty, UserRole, UserStatus } from '@prisma/client'
@@ -41,7 +42,11 @@ export class DoctorServiceImp implements DoctorService {
       passwordHash,
     }
 
-    return this.doctorRepository.createDoctor(doctorData)
+    const doctor = await this.doctorRepository.createDoctor(doctorData)
+
+    await notificationService.sendNewDoctorNotification(doctor.email, doctor.name)
+
+    return doctor
   }
 
   async getDoctorById(id: string): Promise<Doctor> {
