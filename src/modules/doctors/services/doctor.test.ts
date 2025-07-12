@@ -2,7 +2,6 @@ import { FakeAppointmentRepository } from '@/interfaces/repositories/fake_appoin
 import { FakeDoctorRepository } from '@/interfaces/repositories/fake_doctor_repository'
 import { DoctorServiceImp } from '@/modules/doctors/services/DoctorServiceImp'
 import { MedicalSpecialty, UserStatus } from '@prisma/client'
-import { ConflictError, NotFoundError } from '@/shared/errors/AppError'
 
 describe('Doctor Service', () => {
   let doctorService: DoctorServiceImp

@@ -7,7 +7,7 @@ export interface AppointmentRepository {
   createAppointment(data: CreateAppointmentDTO): Promise<Appointment>
   getAppointmentById(id: string): Promise<AppointmentWithDetails | null>
   updateAppointment(id: string, data: UpdateAppointmentDTO): Promise<Appointment>
-  deleteAppointment(id: string): Promise<void>
+  deleteAppointment(id: string): Promise<Appointment>
   getAppointmentsByUser(userId: string, userRole: UserRole): Promise<AppointmentWithDetails[]>
   getOccupiedSlots(doctorId: string, startDate: Date, endDate: Date): Promise<{ date: Date; time: string }[]>
   checkSlotAvailability(doctorId: string, date: string, time: string): Promise<boolean>

@@ -123,14 +123,27 @@ export class FakeAppointmentRepository implements AppointmentRepository {
     }
   }
 
-  async deleteAppointment(id: string): Promise<void> {
+  async deleteAppointment(id: string): Promise<Appointment> {
     const appointmentIndex = this.appointments.findIndex(appointment => appointment.id === id)
 
     if (appointmentIndex === -1) {
       throw new Error('Appointment not found')
     }
 
+    const deletedAppointment = this.appointments[appointmentIndex]
     this.appointments.splice(appointmentIndex, 1)
+
+    return {
+      id: deletedAppointment.id,
+      patientId: deletedAppointment.patientId,
+      doctorId: deletedAppointment.doctorId,
+      date: deletedAppointment.date,
+      time: deletedAppointment.time,
+      status: deletedAppointment.status,
+      notes: deletedAppointment.notes,
+      createdAt: deletedAppointment.createdAt,
+      updatedAt: deletedAppointment.updatedAt,
+    }
   }
 
   async checkSlotAvailability(doctorId: string, date: string, time: string): Promise<boolean> {
