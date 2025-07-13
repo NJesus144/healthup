@@ -8,6 +8,7 @@ import doctorRoutes from '@/modules/doctors/routes/doctor.routes'
 import appointmentRoutes from '@/modules/appointments/routes/appointment.routes'
 import { errorHandler } from '@/shared/errors/errorHandler'
 import authRoutes from '@/modules/authentication/routes/auth.routes'
+import adminRoutes from '@/modules/admin/routes/adminRoutes'
 import NotificationWorker from '@/workers/notificationWorker'
 
 dotenv.config()
@@ -40,6 +41,7 @@ app.use('/auth', authRoutes)
 app.use('/patients', patientRoutes)
 app.use('/doctors', doctorRoutes)
 app.use('/appointments', appointmentRoutes)
+app.use('/admin', adminRoutes)
 
 process.on('SIGTERM', async () => {
   await notificationWorker.close()
