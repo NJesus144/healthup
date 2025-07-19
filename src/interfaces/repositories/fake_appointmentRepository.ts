@@ -181,4 +181,13 @@ export class FakeAppointmentRepository implements AppointmentRepository {
       .filter(appointment => appointment.doctorId === doctorId && appointment.date >= startDate && appointment.date <= endDate)
       .map(appointment => ({ date: appointment.date, time: appointment.time }))
   }
+
+  async countAppointments(where?: Record<string, any>): Promise<number> {
+    return this.appointments.filter(appointment => {
+      if (where) {
+        return Object.entries(where).every(([key, value]) => appointment[key as keyof AppointmentWithDetails] === value)
+      }
+      return true
+    }).length
+  }
 }

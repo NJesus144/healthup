@@ -111,4 +111,13 @@ export class FakeDoctorRepository implements DoctorRepository {
   async getAllBlockedDates(doctorId: string): Promise<Date[]> {
     return this.blockedDates.filter(blocked => blocked.doctorId === doctorId).map(blocked => blocked.date)
   }
+
+  async countDoctors(where?: Record<string, any>): Promise<number> {
+    return this.doctors.filter(doctor => {
+      if (where) {
+        return Object.entries(where).every(([key, value]) => doctor[key as keyof PrismaDoctor] === value)
+      }
+      return true
+    }).length
+  }
 }

@@ -2,8 +2,8 @@ import { PatientRepository } from '@/interfaces/repositories/PatientRepository'
 import { CreatePatientDTO } from '@/modules/patients/dtos/CreatePatientDTO'
 import { UpdatePatientDTO } from '@/modules/patients/dtos/UpdatePatientDTO'
 import { Patient } from '@/modules/patients/models/Patient'
-import { NotFoundError } from '../../shared/errors/AppError'
 import { PrismaPatient } from '@/modules/patients/repositories/PatientRepository'
+import { NotFoundError } from '@/shared/errors/AppError'
 
 export class FakePatientRepository implements PatientRepository {
   private patients: PrismaPatient[] = [
@@ -63,5 +63,9 @@ export class FakePatientRepository implements PatientRepository {
 
   async findPatientByCPF(cpf: string): Promise<Patient | null> {
     return this.patients.find(patient => patient.cpf === cpf) || null
+  }
+
+  async countPatients(): Promise<number> {
+    return this.patients.length
   }
 }

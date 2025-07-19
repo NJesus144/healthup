@@ -17,4 +17,5 @@ export interface DoctorRepository {
   getBlockedDates(doctorId: string, startDate: Date, endDate: Date): Promise<Date[]>
   cancelBlockedDate(doctorId: string, date: Date): Promise<BlockedDate>
   getAllBlockedDates(doctorId: string): Promise<Date[]>
+  countDoctors(): Promise<number>
 }
