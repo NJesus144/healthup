@@ -3,6 +3,7 @@ import { CreateAppointmentDTO } from '@/modules/appointments/dtos/CreateAppointm
 import { validateCreateAppointment } from '@/modules/appointments/validators/validateCreateAppointment'
 import { responseSuccess } from '@/shared/helpers/responseSuccess'
 import { AuthenticatedRequest } from '@/shared/middlewares/authenticationMiddleware'
+import { LogHelper } from '@/shared/utils/logHelpers'
 import { Request, Response } from 'express'
 
 export class AppointmentController {
@@ -14,6 +15,13 @@ export class AppointmentController {
 
     const appointment = await this.appointmentService.createAppointment(appointmentData as CreateAppointmentDTO)
 
+    LogHelper.logAppointment('created', {
+      appointmentId: appointment.id,
+      doctorId: appointment.doctorId,
+      patientId,
+      action: 'create_appointment',
+    })
+
     return responseSuccess(res, appointment, 'Appointment created successfully', 201)
   }
 
@@ -21,6 +29,12 @@ export class AppointmentController {
     const { id } = req.params
 
     const appointment = await this.appointmentService.getAppointmentById(id)
+
+    LogHelper.logSuccess('appointment_retrieved', {
+      userId: appointment.patientId,
+      appointmentId: id,
+      statusCode: 200,
+    })
 
     return responseSuccess(res, appointment, 'Appointment retrieved successfully')
   }
@@ -31,6 +45,12 @@ export class AppointmentController {
 
     const appointment = await this.appointmentService.updateAppointment(id, updateData)
 
+    LogHelper.logSuccess('appointment_deleted', {
+      userId: req.user!.sub,
+      appointmentId: id,
+      statusCode: 200,
+    })
+
     return responseSuccess(res, appointment, 'Appointment updated successfully')
   }
 
@@ -39,7 +59,14 @@ export class AppointmentController {
     const userId = req.user!.sub
     const role = req.user!.role
 
-    await this.appointmentService.deleteAppointment(id, userId, role)
+    const appointment = await this.appointmentService.deleteAppointment(id, userId, role)
+
+    LogHelper.logAppointment('cancelled', {
+      appointmentId: appointment.id,
+      doctorId: appointment.doctorId,
+      patientId: req.user!.sub,
+      action: 'cancel_appointment',
+    })
 
     return responseSuccess(res, null, 'Appointment deleted successfully')
   }

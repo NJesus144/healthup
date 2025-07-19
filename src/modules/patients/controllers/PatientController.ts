@@ -4,6 +4,7 @@ import { validateCreatePatient } from '@/modules/patients/validators/validateCre
 import { responseSuccess } from '@/shared/helpers/responseSuccess'
 import { validateUpdatePatient } from '@/modules/patients/validators/validateUpdatePatient'
 import { AuthenticatedRequest } from '@/shared/middlewares/authenticationMiddleware'
+import { LogHelper } from '@/shared/utils/logHelpers'
 
 export class PatientController {
   constructor(private readonly patientService: PatientService) {}
@@ -12,6 +13,11 @@ export class PatientController {
     const data = validateCreatePatient(req.body)
 
     const patient = await this.patientService.createPatient(data)
+
+    LogHelper.logSuccess('patient_created', {
+      data: patient,
+      statusCode: 201,
+    })
 
     return responseSuccess(res, patient, 'Patient created successfully', 201)
   }
@@ -29,6 +35,11 @@ export class PatientController {
     const data = validateUpdatePatient(req.body)
 
     const patient = await this.patientService.updatePatient(patientId, data)
+
+    LogHelper.logSuccess('patient_updated', {
+      data: patient,
+      statusCode: 200,
+    })
 
     return responseSuccess(res, patient, 'Patient updated successfully')
   }
