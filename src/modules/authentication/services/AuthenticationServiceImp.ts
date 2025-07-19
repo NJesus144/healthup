@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken'
 import bcrypt from 'bcrypt'
 import { User, UserRole } from '@prisma/client'
 import { UserRepository } from '@/interfaces/repositories/UserRepository'
+import { loginsTotal } from '@/metrics'
 
 export class AuthenticationServiceImp implements AuthenticationService {
   constructor(private readonly userRepository: UserRepository) {}
@@ -12,7 +13,7 @@ export class AuthenticationServiceImp implements AuthenticationService {
     return this.userRepository.findById(userId)
   }
 
-  async login(email: string, password: string): Promise<{ access_token: string; refresh_token: string }> {
+  async login(email: string, password: string): Promise<{ access_token: string; refresh_token: string; userId: string }> {
     const user = await this.userRepository.findByEmail(email)
 
     if (!user || !bcrypt.compareSync(password, user.passwordHash)) {
@@ -22,10 +23,12 @@ export class AuthenticationServiceImp implements AuthenticationService {
     const accessToken = this.generateAccessToken(user)
     const refreshToken = this.generateRefreshToken(user)
 
-    return { access_token: accessToken, refresh_token: refreshToken }
+    loginsTotal.inc({ role: user.role })
+
+    return { access_token: accessToken, refresh_token: refreshToken, userId: user.id }
   }
 
-  async refreshToken(refreshToken: string): Promise<{ access_token: string; refresh_token: string }> {
+  async refreshToken(refreshToken: string): Promise<{ access_token: string; refresh_token: string; userId: string }> {
     try {
       const payload = this.verifyRefreshToken(refreshToken)
       const user = await this.userRepository.findById(payload.sub)
@@ -40,6 +43,7 @@ export class AuthenticationServiceImp implements AuthenticationService {
       return {
         access_token: newAccessToken,
         refresh_token: newRefreshToken,
+        userId: user.id,
       }
     } catch (error) {
       throw new InvalidRefreshTokenError()

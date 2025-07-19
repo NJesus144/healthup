@@ -1,4 +1,6 @@
+import { emailsSent } from '@/metrics'
 import { EmailData } from '@/modules/notifications/dtos/notification'
+import { LogHelper } from '@/shared/utils/logHelpers'
 import sgMail from '@sendgrid/mail'
 
 const SENDGRID_TEMPLATES = {
@@ -15,7 +17,10 @@ class EmailService {
   async sendEmail(emailData: EmailData): Promise<void> {
     try {
       await sgMail.send(emailData)
-      console.log(`Email sent successfully to ${emailData.to}`)
+      LogHelper.logSuccess('email_sent_successfully', {
+        data: emailData,
+        statusCode: 200,
+      })
     } catch (error) {
       console.error('Error sending email:', error)
       throw new Error(`Failed to send email: ${error}`)
@@ -34,6 +39,7 @@ class EmailService {
     }
 
     await this.sendEmail(emailData)
+    emailsSent.inc()
   }
 
   async sendNewAppointmentEmail(patientEmail: string, patientName: string, appointmentDate: string): Promise<void> {
@@ -48,6 +54,7 @@ class EmailService {
     }
 
     await this.sendEmail(emailData)
+    emailsSent.inc()
   }
 
   async sendCancelledAppointmentEmail(patientEmail: string, patientName: string, appointmentDate: string): Promise<void> {
@@ -62,6 +69,7 @@ class EmailService {
     }
 
     await this.sendEmail(emailData)
+    emailsSent.inc()
   }
 }
 

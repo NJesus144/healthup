@@ -60,6 +60,14 @@ export class PatientRepositoryImp implements PatientRepository {
     }
   }
 
+  async countPatients(): Promise<number> {
+    return await prisma.user.count({
+      where: {
+        role: UserRole.PATIENT,
+      },
+    })
+  }
+
   async findPatientByCPF(cpf: string): Promise<Patient | null> {
     const patient = await prisma.user.findUnique({
       where: { cpf },

@@ -1,6 +1,7 @@
 import { AppointmentRepository } from '@/interfaces/repositories/AppointmentRepository '
 import { DoctorRepository } from '@/interfaces/repositories/DoctorRepository'
 import { DoctorService } from '@/interfaces/services/DoctorService'
+import { usersTotal } from '@/metrics'
 import { AppointmentWithDetails } from '@/modules/appointments/models/Appointment'
 import { CreateBloquedDateDTO } from '@/modules/doctors/dtos/CreateBloquedDateDTO'
 import { CreateDoctorDTO } from '@/modules/doctors/dtos/CreateDoctorDTO'
@@ -8,6 +9,7 @@ import { GetDoctorAvailabilityDTO } from '@/modules/doctors/dtos/GetDoctorAvaila
 import { UpdateDoctorDTO } from '@/modules/doctors/dtos/UpdateDoctorDTO'
 import { Doctor } from '@/modules/doctors/models/Doctor'
 import { PrismaDoctor } from '@/modules/doctors/repositories/DoctorRepositoryImp'
+import { validateCreateBlockedDate } from '@/modules/doctors/validators/validateCreateBlockedDate'
 import { GetDoctorsQueryDTO } from '@/modules/doctors/validators/validateQueryParameters'
 import notificationService from '@/modules/notifications/services/notificationService'
 import { BadRequestError, ConflictError, NotFoundError } from '@/shared/errors/AppError'
@@ -44,7 +46,9 @@ export class DoctorServiceImp implements DoctorService {
 
     const doctor = await this.doctorRepository.createDoctor(doctorData)
 
-    await notificationService.sendNewDoctorNotification(doctor.email, doctor.name)
+    await this.countTotalDoctors(UserRole.DOCTOR)
+
+    await notificationService.sendNewDoctorNotification(doctor.email, doctor.name, doctor.id)
 
     return doctor
   }
@@ -91,7 +95,9 @@ export class DoctorServiceImp implements DoctorService {
   async blockedDate(doctorId: string, createBloquedDateDTO: CreateBloquedDateDTO): Promise<BlockedDate> {
     await this.getDoctorById(doctorId)
 
-    const blockedDateISO = fromZonedTime(createBloquedDateDTO.date, 'America/Sao_Paulo')
+    const validatedData = validateCreateBlockedDate(createBloquedDateDTO)
+
+    const blockedDateISO = fromZonedTime(validatedData.date, 'America/Sao_Paulo')
 
     const blockedDates = await this.doctorRepository.getBlockedDates(doctorId, blockedDateISO, blockedDateISO)
 
@@ -219,5 +225,10 @@ export class DoctorServiceImp implements DoctorService {
 
   private formatDateForComparison(date: Date): string {
     return date.toISOString().split('T')[0]
+  }
+
+  private async countTotalDoctors(userRole: UserRole): Promise<void> {
+    const total = await this.doctorRepository.countDoctors()
+    usersTotal.set({ role: userRole }, total)
   }
 }
