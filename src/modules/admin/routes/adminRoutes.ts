@@ -1,4 +1,3 @@
-// src/modules/admin/routes/adminRoutes.ts
 import { Router, Response } from 'express'
 import { AdminController } from '@/modules/admin/controllers/AdminController'
 import { AdminServiceImp } from '@/modules/admin/services/AdminServiceImp'
