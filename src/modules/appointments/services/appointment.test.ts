@@ -4,7 +4,6 @@ import { AppointmentStatus, UserRole } from '@prisma/client'
 import { parseISO } from 'date-fns'
 import { FakeDoctorRepository } from '@/interfaces/repositories/fake_doctor_repository'
 import { fromZonedTime } from 'date-fns-tz'
-import emailQueue from '@/modules/notifications/jobs/emailQueue'
 
 describe('Appointment Service', () => {
   let appointmentService: AppointmentServiceImp
