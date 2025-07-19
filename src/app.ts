@@ -10,6 +10,9 @@ import { errorHandler } from '@/shared/errors/errorHandler'
 import authRoutes from '@/modules/authentication/routes/auth.routes'
 import adminRoutes from '@/modules/admin/routes/adminRoutes'
 import NotificationWorker from '@/workers/notificationWorker'
+import { metricsMiddleware } from '@/shared/middlewares/metrics'
+import { register } from '@/metrics'
+import { authLogger, errorLogger, httpLogger } from '@/shared/middlewares/logger'
 
 dotenv.config()
 
@@ -23,6 +26,12 @@ app.use(cors())
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 
+app.use(httpLogger)
+app.use(authLogger)
+app.use(errorLogger)
+
+app.use(metricsMiddleware)
+
 app.use((req, res, next) => {
   ;(req as any).prisma = prisma
   next()
@@ -30,18 +39,22 @@ app.use((req, res, next) => {
 
 app.get('/', (req, res) => {
   res.json({
-    message: 'H0.ealth API está funcionando!',
+    message: 'healthup API está funcionando!',
     version: '1.0.0',
     time: new Date().toISOString(),
   })
 })
 
 app.use('/auth', authRoutes)
-
 app.use('/patients', patientRoutes)
 app.use('/doctors', doctorRoutes)
 app.use('/appointments', appointmentRoutes)
 app.use('/admin', adminRoutes)
+
+app.get('/metrics', async (req, res) => {
+  res.set('Content-Type', register.contentType)
+  res.end(await register.metrics())
+})
 
 process.on('SIGTERM', async () => {
   await notificationWorker.close()
