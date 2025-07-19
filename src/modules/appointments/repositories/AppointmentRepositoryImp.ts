@@ -162,15 +162,9 @@ export class AppointmentRepositoryImp implements AppointmentRepository {
     return !appointment
   }
 
-  // async getDoctorsBySpecialty(specialty?: string): Promise<User[]> {
-  //   return await prisma.user.findMany({
-  //     where: {
-  //       role: UserRole.DOCTOR,
-  //       status: UserStatus.ACTIVE,
-  //       ...(specialty && { specialty: specialty as MedicalSpecialty }),
-  //     },
-  //   })
-  // }
+  async countAppointments(where?: Record<string, any>): Promise<number> {
+    return prisma.appointment.count({ where })
+  }
 
   private convertAppointmentData(appointment: any): Appointment {
     return {
