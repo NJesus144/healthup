@@ -1,32 +1,68 @@
 import emailQueue from '@/modules/notifications/jobs/emailQueue'
+import { LogHelper } from '@/shared/utils/logHelpers'
 
 class NotificationService {
-  async sendNewDoctorNotification(doctorEmail: string, doctorName: string): Promise<void> {
+  async sendNewDoctorNotification(doctorEmail: string, doctorName: string, doctorId: string): Promise<void> {
     try {
       await emailQueue.addNewDoctorJob(doctorEmail, doctorName)
-      console.log(`New doctor notification queued for: ${doctorEmail}`)
+      LogHelper.logNotification('email_sent', {
+        email: doctorEmail,
+        doctorId,
+        action: 'doctor_registration',
+      })
     } catch (error) {
-      console.error('Error queueing new doctor notification:', error)
+      LogHelper.logNotification('email_failed', {
+        email: doctorEmail,
+        doctorId,
+        action: 'doctor_registration',
+        error: (error as Error).message,
+      })
       throw error
     }
   }
 
-  async sendNewAppointmentNotification(appointmentDate: string, patientEmail?: string, patientName?: string): Promise<void> {
+  async sendNewAppointmentNotification(
+    appointmentDate: string,
+    appointmentId: string,
+    doctorId: string,
+    patientEmail?: string,
+    patientName?: string
+  ): Promise<void> {
     try {
       await emailQueue.addNewAppointmentJob(appointmentDate, patientEmail, patientName)
-      console.log(`New appointment notification queued for: ${patientEmail}`)
+      LogHelper.logNotification('email_sent', {
+        email: patientEmail,
+        appointmentId,
+        doctorId,
+        action: 'appointment_confirmation',
+      })
     } catch (error) {
-      console.error('Error queueing new appointment notification:', error)
+      LogHelper.logNotification('email_failed', {
+        email: patientEmail,
+        appointmentId,
+        doctorId,
+        action: 'appointment_confirmation',
+        error: (error as Error).message,
+      })
       throw error
     }
   }
 
-  async sendCancelledAppointmentNotification(appointmentDate: string, patientEmail?: string, patientName?: string): Promise<void> {
+  async sendCancelledAppointmentNotification(appointmentDate: string, appointmentId: string, patientEmail?: string, patientName?: string): Promise<void> {
     try {
       await emailQueue.addCancelledAppointmentJob(appointmentDate, patientEmail, patientName)
-      console.log(`Cancelled appointment notification queued for: ${patientEmail}`)
+      LogHelper.logNotification('email_sent', {
+        email: patientEmail,
+        appointmentId,
+        action: 'appointment_cancellation',
+      })
     } catch (error) {
-      console.error('Error queueing cancelled appointment notification:', error)
+      LogHelper.logNotification('email_failed', {
+        email: patientEmail,
+        appointmentId,
+        action: 'appointment_cancellation',
+        error: (error as Error).message,
+      })
       throw error
     }
   }
