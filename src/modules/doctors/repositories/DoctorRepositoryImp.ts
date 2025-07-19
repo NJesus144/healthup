@@ -120,6 +120,14 @@ export class DoctorRepositoryImp implements DoctorRepository {
     return blockedDates.map(blocked => blocked.date)
   }
 
+  async countDoctors(): Promise<number> {
+    return await prisma.user.count({
+      where: {
+        role: UserRole.DOCTOR,
+      },
+    })
+  }
+
   async cancelBlockedDate(doctorId: string, date: Date): Promise<BlockedDate> {
     const blockedDate = await prisma.blockedDate.delete({
       where: {
