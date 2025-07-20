@@ -105,7 +105,7 @@ export class DoctorServiceImp implements DoctorService {
       throw new ConflictError('This date is already blocked')
     }
 
-    return this.doctorRepository.blockedDate(doctorId, { date: blockedDateISO, reason: createBloquedDateDTO.reason })
+    return this.doctorRepository.blockedDate(doctorId, blockedDateISO, createBloquedDateDTO.reason)
   }
 
   async cancelBlockedDate(doctorId: string, date: Date): Promise<BlockedDate> {

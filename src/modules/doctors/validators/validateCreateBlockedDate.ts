@@ -18,14 +18,13 @@ export function validateCreateBlockedDate(createBlockedDateDTO: CreateBloquedDat
   }
 
   const validatedData = result.data
+  const requestedDate = startOfDay(new Date(validatedData.date + 'T00:00:00'))
 
   const now = new Date()
   const formattedDate = fromZonedTime(now, 'America/Sao_Paulo')
-
-  const requestedDate = startOfDay(new Date(validatedData.date + 'T00:00:00'))
   const todayStart = startOfDay(formattedDate)
-  const minDate = addDays(todayStart, 1)
 
+  const minDate = addDays(todayStart, 1)
   const maxDate = addMonths(todayStart, 3)
 
   if (isBefore(requestedDate, minDate)) {
@@ -40,6 +39,6 @@ export function validateCreateBlockedDate(createBlockedDateDTO: CreateBloquedDat
 
   return {
     ...validatedData,
-    date: new Date(validatedData.date + 'T00:00:00'),
+    date: format(requestedDate, 'yyyy-MM-dd'),
   }
 }

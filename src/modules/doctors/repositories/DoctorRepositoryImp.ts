@@ -141,12 +141,12 @@ export class DoctorRepositoryImp implements DoctorRepository {
     return blockedDate
   }
 
-  async blockedDate(doctorId: string, createBloquedDateDTO: CreateBloquedDateDTO): Promise<BlockedDate> {
+  async blockedDate(doctorId: string, date: Date, reason?: string): Promise<BlockedDate> {
     const blockedDate = await prisma.blockedDate.create({
       data: {
         doctorId,
-        date: createBloquedDateDTO.date,
-        reason: createBloquedDateDTO.reason || null,
+        date,
+        reason: reason,
       },
     })
 

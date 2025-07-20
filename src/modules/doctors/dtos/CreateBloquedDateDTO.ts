@@ -1,4 +1,4 @@
 export interface CreateBloquedDateDTO {
-  date: Date
+  date: string
   reason?: string
 }

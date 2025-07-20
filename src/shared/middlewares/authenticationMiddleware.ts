@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express'
-import { TokenNotProvidedError, TokenExpiredError, ForbiddenError, UnauthorizedError } from '@/shared/errors/AppError'
+import { TokenNotProvidedError, TokenExpiredError, ForbiddenError, UnauthorizedError, NotFoundError } from '@/shared/errors/AppError'
 import { AuthenticationService } from '@/interfaces/services/AuthenticationService'
 import { UserRole } from '@prisma/client'
 
@@ -32,7 +32,7 @@ export function createAuthMiddleware(authenticationService: AuthenticationServic
       const user = await authenticationService.findUserById(payload.sub)
 
       if (!user) {
-        throw new UnauthorizedError('User not found')
+        throw new NotFoundError('User not found')
       }
 
       if (allowedRoles && !allowedRoles.includes(user.role)) {
