@@ -37,6 +37,12 @@ O HealthUp é uma API completa para gerenciamento de consultas médicas que perm
 - Métricas do Sistema: Dashboards com dados de usuários, agendamentos e emails
 - Gestão de Médicos: Aprovação/rejeição de cadastros médicos
 - Controle Total: Visão completa das operações da plataforma
+  
+
+### 🔌 API Endpoints - Principais Exemplos
+
+> 📋 **Documentação Completa**: Em desenvolvimento com Postman Collection (disponível em breve)
+
 
 ### 🛠️ Stack Tecnológica
 **Core**
