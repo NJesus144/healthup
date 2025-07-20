@@ -66,6 +66,41 @@ class NotificationService {
       throw error
     }
   }
+
+  async sendRejectedDoctorNotification(doctorEmail: string, doctorName: string): Promise<void> {
+    try {
+      await emailQueue.addRejectedDoctorJob(doctorEmail, doctorName)
+      LogHelper.logNotification('email_sent', {
+        email: doctorEmail,
+        action: 'doctor_rejection',
+      })
+    } catch (error) {
+      LogHelper.logNotification('email_failed', {
+        email: doctorName,
+        action: 'doctor_rejection',
+        error: (error as Error).message,
+      })
+      throw error
+    }
+  }
+
+  async sendApprovedDoctorNotification(doctorEmail: string, doctorName: string): Promise<void> {
+    try {
+      console.log('Sending approved doctor notification to:', doctorEmail, doctorName)
+      await emailQueue.addApprovedDoctorJob(doctorEmail, doctorName)
+      LogHelper.logNotification('email_sent', {
+        email: doctorEmail,
+        action: 'doctor_approval',
+      })
+    } catch (error) {
+      LogHelper.logNotification('email_failed', {
+        email: doctorName,
+        action: 'doctor_approval',
+        error: (error as Error).message,
+      })
+      throw error
+    }
+  }
 }
 
 export default new NotificationService()
