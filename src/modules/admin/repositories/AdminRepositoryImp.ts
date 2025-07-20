@@ -3,6 +3,7 @@ import { PendingDoctorDTO } from '@/modules/admin/dtos/PendingDoctorDTO'
 import { DashboardDTO } from '@/modules/admin/dtos/DashboardDTO'
 import { AdminRepository } from '@/interfaces/repositories/AdminRepository'
 import { UserRole, UserStatus } from '@prisma/client'
+import { Doctor } from '@/modules/doctors/models/Doctor'
 
 export class AdminRepositoryImp implements AdminRepository {
   async getDashboardMetrics(): Promise<DashboardDTO> {
@@ -81,13 +82,15 @@ export class AdminRepositoryImp implements AdminRepository {
     }))
   }
 
-  async updateDoctorStatus(id: string, status: UserStatus): Promise<void> {
-    await prisma.user.update({
+  async updateDoctorStatus(id: string, status: UserStatus): Promise<Doctor> {
+    const updatedDoctor = await prisma.user.update({
       where: { id },
       data: {
         status,
         updatedAt: new Date(),
       },
     })
+
+    return updatedDoctor
   }
 }

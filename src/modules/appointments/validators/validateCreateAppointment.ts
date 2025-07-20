@@ -26,7 +26,7 @@ export function validateCreateAppointment(data: CreateAppointmentDTO): CreateApp
     throw new AppError('Invalid date format', 400)
   }
 
-  if (!isAfter(appointmentDate, startOfDay(new Date()))) {
+  if (!isAfter(appointmentDate, new Date())) {
     throw new AppError('Appointment date must be in the future', 400)
   }
 
