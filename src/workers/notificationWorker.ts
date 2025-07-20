@@ -4,6 +4,8 @@ import { EmailType, JobData } from '@/modules/notifications/dtos/notification'
 import redisClient from '@/lib/redis'
 import { processNewAppointmentEmail } from '@/modules/notifications/jobs/processors/newAppointmentProcessos'
 import { processCancelledAppointmentEmail } from '@/modules/notifications/jobs/processors/cancelledAppointmentProcessor'
+import { processRejectedDoctorEmail } from '@/modules/notifications/jobs/processors/rejectedDoctorProcessor'
+import { processApprovedDoctorEmail } from '@/modules/notifications/jobs/processors/approvedDoctorProcessor'
 
 class NotificationWorker {
   private worker: Worker
@@ -22,7 +24,7 @@ class NotificationWorker {
   private async processJob(job: any): Promise<void> {
     const jobData: JobData = job.data
 
-    console.log(`Processing job: ${jobData.type}`)
+    console.log(`Processing job: ${jobData.data} ${jobData.type}`)
 
     switch (jobData.type) {
       case EmailType.NEW_DOCTOR:
@@ -33,6 +35,12 @@ class NotificationWorker {
         break
       case EmailType.CANCELLED_APPOINTMENT:
         await processCancelledAppointmentEmail(job)
+        break
+      case EmailType.REJECTED_DOCTOR:
+        await processRejectedDoctorEmail(job)
+        break
+      case EmailType.APPROVED_DOCTOR:
+        await processApprovedDoctorEmail(job)
         break
       default:
         throw new Error(`Unknown job type: ${jobData.type}`)

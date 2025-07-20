@@ -1,15 +1,16 @@
-import { endOfDay, format, isSameDay, startOfDay } from 'date-fns'
+import { endOfDay, format, formatISO, isSameDay, startOfDay } from 'date-fns'
 import { AppointmentRepository } from '@/interfaces/repositories/AppointmentRepository '
 import { AppointmentService } from '@/interfaces/services/AppointmentService'
 import { CreateAppointmentDTO } from '@/modules/appointments/dtos/CreateAppointmentDTO'
 import { Appointment, AppointmentWithDetails } from '@/modules/appointments/models/Appointment'
 import { ConflictError, ForbiddenError, NotFoundError } from '@/shared/errors/AppError'
 import { UpdateAppointmentDTO } from '@/modules/appointments/dtos/UpdateAppointmentDTO'
-import { UserRole } from '@prisma/client'
+import { AppointmentStatus, UserRole } from '@prisma/client'
 import { fromZonedTime } from 'date-fns-tz'
 import { DoctorRepository } from '@/interfaces/repositories/DoctorRepository'
 import notificationService from '@/modules/notifications/services/notificationService'
 import { ptBR } from 'date-fns/locale'
+import { appointmentsTotal, futureAppointmentsGauge } from '@/metrics'
 
 export class AppointmentServiceImp implements AppointmentService {
   constructor(
@@ -36,9 +37,19 @@ export class AppointmentServiceImp implements AppointmentService {
 
     const appointment = await this.appointmentRepository.createAppointment(data)
 
+    appointmentsTotal.inc({ status: appointment.status })
+
+    await this.updateFutureAppointmentsGauge()
+
     const formattedDate = await this.formatedDate(appointment.date)
 
-    await notificationService.sendNewAppointmentNotification(formattedDate, appointment.patientEmail, appointment.patientName)
+    await notificationService.sendNewAppointmentNotification(
+      formattedDate,
+      appointment.id,
+      appointment.doctorId,
+      appointment.patientEmail,
+      appointment.patientName
+    )
 
     return appointment
   }
@@ -63,7 +74,7 @@ export class AppointmentServiceImp implements AppointmentService {
     return await this.appointmentRepository.updateAppointment(id, data)
   }
 
-  async deleteAppointment(id: string, userId: string, role: UserRole): Promise<void> {
+  async deleteAppointment(id: string, userId: string, role: UserRole): Promise<Appointment> {
     const existingAppointment = await this.appointmentRepository.getAppointmentById(id)
 
     if (!existingAppointment) {
@@ -79,9 +90,15 @@ export class AppointmentServiceImp implements AppointmentService {
 
     const appointment = await this.appointmentRepository.deleteAppointment(id)
 
+    appointmentsTotal.inc({ status: 'cancelled' })
+
+    await this.updateFutureAppointmentsGauge()
+
     const formattedDate = await this.formatedDate(appointment.date)
 
-    await notificationService.sendCancelledAppointmentNotification(formattedDate, appointment.patientEmail, appointment.patientName)
+    await notificationService.sendCancelledAppointmentNotification(formattedDate, appointment.id, appointment.patientEmail, appointment.patientName)
+
+    return appointment
   }
 
   async getMyAppointments(userId: string, userRole: UserRole): Promise<AppointmentWithDetails[]> {
@@ -96,5 +113,15 @@ export class AppointmentServiceImp implements AppointmentService {
     return format(date, "dd/MM/yyyy 'às' HH:mm", {
       locale: ptBR,
     })
+  }
+
+  private async updateFutureAppointmentsGauge() {
+    const today = new Date()
+    const total = await this.appointmentRepository.countAppointments({
+      date: { gte: startOfDay(today), lte: endOfDay(today) },
+      status: AppointmentStatus.SCHEDULED,
+    })
+
+    futureAppointmentsGauge.set({ date: formatISO(today, { representation: 'date' }) }, total)
   }
 }

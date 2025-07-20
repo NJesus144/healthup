@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express'
 import { AppError } from './AppError'
+import { LogHelper } from '@/shared/utils/logHelpers'
 
 export const asyncHandler = (fn: Function) => {
   return (req: Request, res: Response, next: NextFunction) => {
@@ -8,6 +9,17 @@ export const asyncHandler = (fn: Function) => {
 }
 
 export function errorHandler(err: Error, req: Request, res: Response, next: NextFunction) {
+  const method = req.method
+  const path = req.path
+
+  LogHelper.logError(err, {
+    message: err.message,
+    method,
+    path,
+    statusCode: err instanceof AppError ? err.statusCode : 500,
+    timestamp: new Date().toISOString(),
+  })
+
   if (err instanceof AppError) {
     return res.status(err.statusCode).json({
       success: false,

@@ -1,6 +1,7 @@
 import { AdminRepository } from '@/interfaces/repositories/AdminRepository'
 import { DashboardDTO } from '@/modules/admin/dtos/DashboardDTO'
 import { PendingDoctorDTO } from '@/modules/admin/dtos/PendingDoctorDTO'
+import { Doctor } from '@/modules/doctors/models/Doctor'
 import { ConflictError, NotFoundError } from '@/shared/errors/AppError'
 import { UserStatus } from '@prisma/client'
 
@@ -54,7 +55,7 @@ export class FakeAdminRepository implements AdminRepository {
     return this.pendingDoctors.filter(doctor => doctor.status === 'PENDING')
   }
 
-  async updateDoctorStatus(id: string, status: UserStatus): Promise<void> {
+  async updateDoctorStatus(id: string, status: UserStatus): Promise<Doctor> {
     const doctorIndex = this.pendingDoctors.findIndex(doctor => doctor.id === id)
     if (doctorIndex === -1) {
       throw new NotFoundError('Doctor not found')
@@ -65,6 +66,16 @@ export class FakeAdminRepository implements AdminRepository {
     }
 
     this.pendingDoctors[doctorIndex].status = status as any
+    const updatedDoctor: Doctor = {
+      ...this.pendingDoctors[doctorIndex],
+      status,
+      cpf: '235234534534',
+      specialty: null,
+      id: this.pendingDoctors[doctorIndex].id,
+      updatedAt: new Date(),
+    }
+
+    return updatedDoctor
   }
 
   resetData(): void {

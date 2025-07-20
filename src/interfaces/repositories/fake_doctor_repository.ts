@@ -71,12 +71,12 @@ export class FakeDoctorRepository implements DoctorRepository {
     } as PrismaDoctor
   }
 
-  async blockedDate(doctorId: string, data: { date: Date; reason?: string }): Promise<BlockedDate> {
+  async blockedDate(doctorId: string, date: Date, reason?: string): Promise<BlockedDate> {
     const newBlockedDate: BlockedDate = {
       id: String(this.blockedDates.length + 1),
       doctorId,
-      date: data.date,
-      reason: data.reason || null,
+      date,
+      reason: reason || null,
       createdAt: new Date(),
     }
 
@@ -110,5 +110,14 @@ export class FakeDoctorRepository implements DoctorRepository {
 
   async getAllBlockedDates(doctorId: string): Promise<Date[]> {
     return this.blockedDates.filter(blocked => blocked.doctorId === doctorId).map(blocked => blocked.date)
+  }
+
+  async countDoctors(where?: Record<string, any>): Promise<number> {
+    return this.doctors.filter(doctor => {
+      if (where) {
+        return Object.entries(where).every(([key, value]) => doctor[key as keyof PrismaDoctor] === value)
+      }
+      return true
+    }).length
   }
 }

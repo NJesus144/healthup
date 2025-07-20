@@ -13,8 +13,9 @@ export interface DoctorRepository {
   findDoctorByCPF(cpf: string): Promise<Doctor | null>
   getDoctorByEmail(email: string): Promise<PrismaDoctor | null>
   findAllAvailableDoctors(filter: GetDoctorsQueryDTO): Promise<Doctor[]>
-  blockedDate(doctorId: string, date: CreateBloquedDateDTO): Promise<BlockedDate>
+  blockedDate(doctorId: string, date: Date, reason?: string): Promise<BlockedDate>
   getBlockedDates(doctorId: string, startDate: Date, endDate: Date): Promise<Date[]>
   cancelBlockedDate(doctorId: string, date: Date): Promise<BlockedDate>
   getAllBlockedDates(doctorId: string): Promise<Date[]>
+  countDoctors(): Promise<number>
 }

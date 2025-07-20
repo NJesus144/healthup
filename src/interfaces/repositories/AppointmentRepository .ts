@@ -1,7 +1,7 @@
 import { CreateAppointmentDTO } from '@/modules/appointments/dtos/CreateAppointmentDTO'
 import { UpdateAppointmentDTO } from '@/modules/appointments/dtos/UpdateAppointmentDTO'
 import { Appointment, AppointmentWithDetails } from '@/modules/appointments/models/Appointment'
-import { User, UserRole } from '@prisma/client'
+import { UserRole } from '@prisma/client'
 
 export interface AppointmentRepository {
   createAppointment(data: CreateAppointmentDTO): Promise<Appointment>
@@ -11,5 +11,6 @@ export interface AppointmentRepository {
   getAppointmentsByUser(userId: string, userRole: UserRole): Promise<AppointmentWithDetails[]>
   getOccupiedSlots(doctorId: string, startDate: Date, endDate: Date): Promise<{ date: Date; time: string }[]>
   checkSlotAvailability(doctorId: string, date: string, time: string): Promise<boolean>
+  countAppointments(where?: Record<string, any>): Promise<number>
   // getDoctorsBySpecialty(specialty?: string): Promise<User[]>
 }

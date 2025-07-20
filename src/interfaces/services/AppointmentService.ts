@@ -7,6 +7,6 @@ export interface AppointmentService {
   createAppointment(data: CreateAppointmentDTO): Promise<Appointment>
   getAppointmentById(id: string): Promise<AppointmentWithDetails>
   updateAppointment(id: string, data: UpdateAppointmentDTO): Promise<Appointment>
-  deleteAppointment(id: string, userId: string, role: UserRole): Promise<void>
+  deleteAppointment(id: string, userId: string, role: UserRole): Promise<Appointment>
   getMyAppointments(userId: string, userRole: UserRole): Promise<AppointmentWithDetails[]>
 }

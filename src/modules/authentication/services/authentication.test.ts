@@ -92,6 +92,7 @@ describe('AuthenticationService', () => {
       expect(result).toEqual({
         access_token: 'access-token',
         refresh_token: 'refresh-token',
+        userId: mockUser.id,
       })
       expect(mockUserRepository.findByEmail).toHaveBeenCalledWith(email)
       expect(mockBcrypt.compareSync).toHaveBeenCalledWith(password, mockUser.passwordHash)
@@ -139,6 +140,7 @@ describe('AuthenticationService', () => {
       expect(result).toEqual({
         access_token: 'new-access-token',
         refresh_token: 'new-refresh-token',
+        userId: mockUser.id,
       })
       expect(mockJwt.verify).toHaveBeenCalledWith(refreshToken, process.env.JWT_PUBLIC_KEY, { algorithms: ['RS256'] })
       expect(mockUserRepository.findById).toHaveBeenCalledWith(mockTokenPayload.sub)

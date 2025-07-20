@@ -3,7 +3,8 @@ import { DoctorRepository } from '@/interfaces/repositories/DoctorRepository'
 import { AdminService } from '@/interfaces/services/AdminService'
 import { DashboardDTO } from '@/modules/admin/dtos/DashboardDTO'
 import { UpdateDoctorStatusDTO } from '@/modules/admin/dtos/UpdateDoctorStatusDTO'
-import { ConflictError, NotFoundError } from '@/shared/errors/AppError'
+import notificationService from '@/modules/notifications/services/notificationService'
+import { ConflictError, InternalServerError, NotFoundError } from '@/shared/errors/AppError'
 import { UserStatus } from '@prisma/client'
 
 export class AdminServiceImp implements AdminService {
@@ -27,6 +28,13 @@ export class AdminServiceImp implements AdminService {
 
     if (doctor.status !== UserStatus.PENDING) throw new ConflictError('Doctor status must be PENDING to update')
 
-    await this.adminRepository.updateDoctorStatus(id, data.status)
+    const updatedDoctor = await this.adminRepository.updateDoctorStatus(id, data.status)
+
+    if (!updatedDoctor) throw new InternalServerError('Internal server error while updating doctor status ')
+    if (updatedDoctor.status === UserStatus.ACTIVE) {
+      await notificationService.sendApprovedDoctorNotification(updatedDoctor.email, updatedDoctor.name)
+    } else if (updatedDoctor.status === UserStatus.REJECTED) {
+      await notificationService.sendRejectedDoctorNotification(updatedDoctor.email, updatedDoctor.name)
+    }
   }
 }

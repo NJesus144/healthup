@@ -4,7 +4,6 @@ import { AppointmentStatus, UserRole } from '@prisma/client'
 import { parseISO } from 'date-fns'
 import { FakeDoctorRepository } from '@/interfaces/repositories/fake_doctor_repository'
 import { fromZonedTime } from 'date-fns-tz'
-import emailQueue from '@/modules/notifications/jobs/emailQueue'
 
 describe('Appointment Service', () => {
   let appointmentService: AppointmentServiceImp
@@ -61,7 +60,7 @@ describe('Appointment Service', () => {
         notes: 'Consulta',
       }
       const dateIso = fromZonedTime('2024-12-25', 'America/Sao_Paulo')
-      await fakeDoctorRepository.blockedDate('doctor-1', { date: dateIso, reason: 'Feriado de Natal' })
+      await fakeDoctorRepository.blockedDate('doctor-1', dateIso, 'Feriado de Natal')
 
       await expect(appointmentService.createAppointment(appointmentData)).rejects.toThrow('This date is blocked for the doctor')
     })

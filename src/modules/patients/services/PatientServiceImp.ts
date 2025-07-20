@@ -1,11 +1,13 @@
 import { PatientRepository } from '@/interfaces/repositories/PatientRepository'
 import { PatientService } from '@/interfaces/services/PatientService'
+import { usersTotal } from '@/metrics'
 import { CreatePatientDTO } from '@/modules/patients/dtos/CreatePatientDTO'
 import { UpdatePatientDTO } from '@/modules/patients/dtos/UpdatePatientDTO'
 import { Patient } from '@/modules/patients/models/Patient'
 import { PrismaPatient } from '@/modules/patients/repositories/PatientRepository'
 import { BadRequestError, ConflictError, NotFoundError } from '@/shared/errors/AppError'
 import { DocumentValidator } from '@/shared/utils/documentValidator'
+import { UserRole } from '@prisma/client'
 import bcrypt from 'bcrypt'
 
 export class PatientServiceImp implements PatientService {
@@ -28,7 +30,11 @@ export class PatientServiceImp implements PatientService {
       passwordHash,
     }
 
-    return this.patientRepository.createPatient(patientData)
+    const patient = await this.patientRepository.createPatient(patientData)
+
+    await this.countTotalPatients(UserRole.PATIENT)
+
+    return patient
   }
 
   async getPatientById(id: string): Promise<Patient | null> {
@@ -50,5 +56,10 @@ export class PatientServiceImp implements PatientService {
     if (!patient) throw new NotFoundError('User not found')
 
     return await this.patientRepository.updatePatient(id, updatePatientDTO)
+  }
+
+  private async countTotalPatients(userRole: UserRole): Promise<void> {
+    const total = await this.patientRepository.countPatients()
+    usersTotal.set({ role: userRole }, total)
   }
 }

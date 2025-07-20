@@ -37,6 +37,40 @@ class EmailQueue {
     console.log(`New doctor email job added for: ${doctorEmail}`)
   }
 
+  async addRejectedDoctorJob(doctorEmail: string, doctorName: string): Promise<void> {
+    const jobData: JobData = {
+      type: EmailType.REJECTED_DOCTOR,
+      data: {
+        doctorEmail,
+        doctorName,
+      },
+    }
+
+    await this.queue.add('send-email', jobData, {
+      priority: 2,
+      delay: 0,
+    })
+
+    console.log(`Rejected doctor email job added for: ${doctorEmail}`)
+  }
+
+  async addApprovedDoctorJob(doctorEmail: string, doctorName: string): Promise<void> {
+    const jobData: JobData = {
+      type: EmailType.APPROVED_DOCTOR,
+      data: {
+        doctorEmail,
+        doctorName,
+      },
+    }
+
+    await this.queue.add('send-email', jobData, {
+      priority: 2,
+      delay: 0,
+    })
+
+    console.log(`Approved doctor email job added for: ${doctorEmail}`)
+  }
+
   async addNewAppointmentJob(appointmentDate: string, patientEmail?: string, patientName?: string): Promise<void> {
     const jobData: JobData = {
       type: EmailType.NEW_APPOINTMENT,

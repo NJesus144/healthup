@@ -6,6 +6,7 @@ import { validateCreateDoctor } from '@/modules/doctors/validators/validateCreat
 import { validateUpdateDoctor } from '@/modules/doctors/validators/validateUpdateDoctor'
 import { validateGetDoctorsQuery } from '@/modules/doctors/validators/validateQueryParameters'
 import { validateGetDoctorAvailability } from '@/modules/doctors/validators/validateGetDoctorAvailability'
+import { LogHelper } from '@/shared/utils/logHelpers'
 
 export class DoctorController {
   constructor(private readonly doctorService: DoctorService) {}
@@ -14,6 +15,11 @@ export class DoctorController {
     const data = validateCreateDoctor(req.body)
 
     const doctor = await this.doctorService.createDoctor(data)
+
+    LogHelper.logSuccess('doctor_created', {
+      data: doctor,
+      statusCode: 201,
+    })
 
     return responseSuccess(res, doctor, 'Doctor created successfully', 201)
   }
@@ -32,6 +38,11 @@ export class DoctorController {
 
     const doctor = await this.doctorService.updateDoctor(doctorId, data)
 
+    LogHelper.logSuccess('doctor_updated', {
+      data: doctor,
+      statusCode: 200,
+    })
+
     return responseSuccess(res, doctor, 'Doctor updated successfully')
   }
 
@@ -47,7 +58,7 @@ export class DoctorController {
 
     const blockedDate = await this.doctorService.blockedDate(doctorId, req.body)
 
-    return responseSuccess(res, blockedDate, 'Blocked date retrieved successfully')
+    return responseSuccess(res, blockedDate, 'Blocked date retrieved successfully', 201)
   }
 
   async cancelBlockedDate(req: AuthenticatedRequest, res: Response): Promise<Response> {

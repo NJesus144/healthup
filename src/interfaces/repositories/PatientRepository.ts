@@ -9,4 +9,5 @@ export interface PatientRepository {
   updatePatient(id: string, data: UpdatePatientDTO): Promise<Patient>
   findByEmail(email: string): Promise<PrismaPatient | null>
   findPatientByCPF(cpf: string): Promise<Patient | null>
+  countPatients(): Promise<number>
 }

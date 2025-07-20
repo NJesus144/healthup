@@ -5,6 +5,7 @@ import { LoginDTO } from '@/modules/authentication/dtos/LoginDTO'
 import { responseSuccess } from '@/shared/helpers/responseSuccess'
 import { TokenExpiredError, TokenNotProvidedError } from '@/shared/errors/AppError'
 import jwt from 'jsonwebtoken'
+import { LogHelper } from '@/shared/utils/logHelpers'
 
 export class AuthenticationController {
   constructor(private authenticationService: AuthenticationService) {}
@@ -12,12 +13,18 @@ export class AuthenticationController {
   async login(req: Request, res: Response): Promise<Response> {
     const { email, password } = validateLoginData(req.body as LoginDTO)
 
-    const tokens = await this.authenticationService.login(email, password)
+    const userInfo = await this.authenticationService.login(email, password)
 
-    this.generateAccessTokenCookie(res, tokens.access_token)
-    this.generateRefreshTokenCookie(res, tokens.refresh_token)
+    this.generateAccessTokenCookie(res, userInfo.access_token)
+    this.generateRefreshTokenCookie(res, userInfo.refresh_token)
 
-    return responseSuccess(res, tokens, 'Login successful')
+    LogHelper.logAuth('login', {
+      category: 'auth',
+      action: 'login',
+      userId: userInfo.userId,
+    })
+
+    return responseSuccess(res, userInfo, 'Login successful')
   }
 
   async refreshToken(req: Request, res: Response): Promise<Response> {
@@ -28,12 +35,18 @@ export class AuthenticationController {
     }
 
     try {
-      const tokens = await this.authenticationService.refreshToken(refreshToken)
+      const userInfo = await this.authenticationService.refreshToken(refreshToken)
 
-      this.generateAccessTokenCookie(res, tokens.access_token)
-      this.generateRefreshTokenCookie(res, tokens.refresh_token)
+      this.generateAccessTokenCookie(res, userInfo.access_token)
+      this.generateRefreshTokenCookie(res, userInfo.refresh_token)
 
-      return responseSuccess(res, tokens, 'Token refreshed successfully')
+      LogHelper.logAuth('login', {
+        category: 'auth',
+        action: 'login',
+        userId: userInfo.userId,
+      })
+
+      return responseSuccess(res, userInfo, 'Token refreshed successfully')
     } catch (error) {
       if (error instanceof jwt.TokenExpiredError) {
         throw new TokenExpiredError('Token expired')
@@ -45,6 +58,11 @@ export class AuthenticationController {
   async logout(req: Request, res: Response): Promise<Response> {
     res.clearCookie('accessToken')
     res.clearCookie('refreshToken')
+
+    LogHelper.logAuth('login', {
+      category: 'auth',
+      action: 'logout',
+    })
 
     return res.status(204).end()
   }
