@@ -131,7 +131,7 @@ describe('Doctor Service', () => {
   describe('blockedDate', () => {
     it('should successfully block a date for a doctor', async () => {
       const blockDateData = {
-        date: new Date('2025-08-15'),
+        date: '2025-08-15',
         reason: 'Férias',
       }
 
@@ -145,7 +145,7 @@ describe('Doctor Service', () => {
 
     it('should throw NotFoundError when trying to block date for non-existent doctor', async () => {
       const blockDateData = {
-        date: new Date('2025-08-15'),
+        date: '2025-08-15',
         reason: 'Férias',
       }
 
@@ -154,7 +154,7 @@ describe('Doctor Service', () => {
 
     it('should throw ConflictError when trying to block an already blocked date', async () => {
       const blockDateData = {
-        date: new Date('2025-08-15'),
+        date: '2025-08-15',
         reason: 'Férias',
       }
 
@@ -165,7 +165,7 @@ describe('Doctor Service', () => {
 
     it('should block a date without reason', async () => {
       const blockDateData = {
-        date: new Date('2025-08-20'),
+        date: '2025-08-20',
       }
 
       const blockedDate = await doctorService.blockedDate('1', blockDateData)
@@ -177,7 +177,7 @@ describe('Doctor Service', () => {
 
     it('should handle timezone conversion correctly when blocking a date', async () => {
       const blockDateData = {
-        date: new Date('2025-08-15T10:00:00.000Z'),
+        date: '2025-10-15',
         reason: 'Test timezone',
       }
 
@@ -191,12 +191,12 @@ describe('Doctor Service', () => {
 
     it('should detect conflict when blocking same date with different times', async () => {
       const blockDateData1 = {
-        date: new Date('2025-08-15T08:00:00.000Z'),
+        date: '2025-08-16',
         reason: 'Morning block',
       }
 
       const blockDateData2 = {
-        date: new Date('2025-08-15T20:00:00.000Z'),
+        date: '2025-08-16',
         reason: 'Evening block',
       }
 
@@ -208,12 +208,17 @@ describe('Doctor Service', () => {
 
   describe('cancelBlockedDate', () => {
     it('should successfully cancel a blocked date', async () => {
+      const data = {
+        date: '2025-08-15',
+        reason: '',
+      }
+
       const blockDateData = {
         date: new Date('2025-08-15'),
         reason: 'Férias',
       }
 
-      await doctorService.blockedDate('1', blockDateData)
+      await doctorService.blockedDate('1', data)
 
       const canceledDate = await doctorService.cancelBlockedDate('1', blockDateData.date)
 
@@ -244,12 +249,12 @@ describe('Doctor Service', () => {
 
     it('should return blocked dates for a doctor', async () => {
       const blockDateData1 = {
-        date: new Date('2025-08-15'),
+        date: '2025-08-15',
         reason: 'Férias',
       }
 
       const blockDateData2 = {
-        date: new Date('2025-08-20'),
+        date: '2025-08-20',
         reason: 'Conferência',
       }
 
@@ -262,8 +267,8 @@ describe('Doctor Service', () => {
       expect(blockedDates.length).toBe(2)
 
       const blockedDatesOnly = blockedDates.map(date => date.toISOString().split('T')[0])
-      const expectedDate1 = blockDateData1.date.toISOString().split('T')[0]
-      const expectedDate2 = blockDateData2.date.toISOString().split('T')[0]
+      const expectedDate1 = blockDateData1.date.toString().split('T')[0]
+      const expectedDate2 = blockDateData2.date.toString().split('T')[0]
 
       expect(blockedDatesOnly).toContain(expectedDate1)
       expect(blockedDatesOnly).toContain(expectedDate2)
@@ -289,7 +294,7 @@ describe('Doctor Service', () => {
 
     it('should return availability with blocked dates marked as unavailable', async () => {
       const blockDateData = {
-        date: new Date('2025-08-15'),
+        date: '2025-08-15',
         reason: 'Férias',
       }
 
@@ -298,7 +303,7 @@ describe('Doctor Service', () => {
       const availability = await doctorService.getDoctorAvailability('1')
 
       const blockedDateAvailability = availability.availability.find(
-        day => day.date.toISOString().split('T')[0] === blockDateData.date.toISOString().split('T')[0]
+        day => day.date.toISOString().split('T')[0] === blockDateData.date.toString().split('T')[0]
       )
 
       expect(blockedDateAvailability).toBeDefined()

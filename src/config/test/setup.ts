@@ -5,6 +5,8 @@ jest.mock('@/modules/notifications/jobs/emailQueue', () => ({
     addNewDoctorJob: jest.fn().mockResolvedValue(undefined),
     addNewAppointmentJob: jest.fn().mockResolvedValue(undefined),
     addCancelledAppointmentJob: jest.fn().mockResolvedValue(undefined),
+    addRejectedDoctorJob: jest.fn().mockResolvedValue(undefined),
+    addApprovedDoctorJob: jest.fn().mockResolvedValue(undefined),
     close: jest.fn().mockResolvedValue(undefined),
   },
 }))

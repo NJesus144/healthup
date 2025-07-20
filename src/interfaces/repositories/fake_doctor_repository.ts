@@ -71,12 +71,12 @@ export class FakeDoctorRepository implements DoctorRepository {
     } as PrismaDoctor
   }
 
-  async blockedDate(doctorId: string, data: { date: Date; reason?: string }): Promise<BlockedDate> {
+  async blockedDate(doctorId: string, date: Date, reason?: string): Promise<BlockedDate> {
     const newBlockedDate: BlockedDate = {
       id: String(this.blockedDates.length + 1),
       doctorId,
-      date: data.date,
-      reason: data.reason || null,
+      date,
+      reason: reason || null,
       createdAt: new Date(),
     }
 
